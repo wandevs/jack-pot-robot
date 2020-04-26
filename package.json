@@ -1,0 +1,21 @@
+{
+  "name": "JackPotRobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bn.js": "^5.1.1",
+    "dotenv": "^8.2.0",
+    "iwan-sdk": "^1.1.1",
+    "log4js": "^6.2.1",
+    "node-schedule": "^1.3.2",
+    "wanchainjs-tx": "^1.5.0",
+    "web3": "^1.2.6"
+  }
+}
