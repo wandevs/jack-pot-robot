@@ -31,7 +31,7 @@ const robotSchedules = ()=>{
   });
 
   // lotterySettlement 结算, 周五晚上7点
-  schedule.scheduleJob('0 20 * * * 5', async () => {
+  schedule.scheduleJob('0 19 * * * 5', async () => {
     log.info('settlement current lottery');
     await wan.jackPot.lotterySettlement();
   });

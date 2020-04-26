@@ -26,7 +26,7 @@ const getTxCount = async (addr) => {
   return await web3.eth.getTransactionCount(addr);
 };
 
-const signTx = (nonce, data, prvKey, address) => {
+const signTx = (nonce, data, prvKey) => {
   const txParams = {
     Txtype: 0x01,
     nonce: nonce,
@@ -99,23 +99,11 @@ class JackPot {
     const data = this.contract.methods.lotterySettlement().encodeABI();
     return await this.doOperator(this.lotterySettlement.name, data);
   }
-
-  ////////////////////////////////////////////////////////
-  // jackPotRobot Owner
-  async setOperator(addr) {
-    const data = this.contract.methods.setOperator(addr).encodeABI();
-    const nonce = await getTxCount(process.env.JACKPOT_OWNER_ADDRESS);
-    const rawTx = signTx(nonce, data, process.env.JACKPOT_OWNER_PVKEY);
-    const txHash = await sendRawTxByWeb3(rawTx);
-    console.log(txHash);
-  }
-
 }
 
 const jackPot = new JackPot();
 
 // setTimeout( async () => {
-//   // await jackPot.setOperator(process.env.JACKPOT_OPERATOR_ADDRESS);
 //   await jackPot.open();
 //   await jackPot.update();
 //   await jackPot.lotterySettlement();
