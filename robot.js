@@ -13,7 +13,7 @@ const robotSchedules = ()=>{
   }); 
 
   // open 开始投注，周六早上8点 
-  schedule.scheduleJob('0 0 8 * * *', async () => {
+  schedule.scheduleJob('0 0 8 * * 6', async () => {
     log.info('open a new lottery');
     await wan.jackPot.open();
   }); 
