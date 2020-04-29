@@ -24,8 +24,7 @@ require('./lib/email');
 const jackPot = require('./lib/wanchain').jackPot;
 const pos = require('./lib/wanchain').pos;
 const getBalance = require('./lib/wanchain').getBalance;
-const loadValidatorsState = require('./lib/wanchain').loadValidatorsState;
-const saveValidatorsState = require('./lib/wanchain').saveValidatorsState;
+const web3 = require('web3');
 const sendMail = require('./lib/email');
 
 log.info("test");
@@ -36,11 +35,13 @@ setTimeout( async () => {
   // log.info(await getBalance(process.env.JACKPOT_OPERATOR_ADDRESS));
 
   // await jackPot.open();
+  await jackPot.stakeIn([1], [0x10]);
   // await jackPot.update();
-  // await jackPot.lotterySettlement();
+  // await jackPot.chooseValidator();
+  // await jackPot.runDelegateIn();
   // await jackPot.close();
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
+  // await jackPot.lotterySettlement();
+
 
   // await jackPot.balanceCheck();
 
