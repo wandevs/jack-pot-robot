@@ -39,7 +39,8 @@ setTimeout( async () => {
   // await jackPot.update();
   // await jackPot.lotterySettlement();
   // await jackPot.close();
-  // await jackPot.runDelegateIn();
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
 
   // await jackPot.balanceCheck();
 
@@ -55,9 +56,13 @@ setTimeout( async () => {
   // const data = loadValidatorsState();
   // console.log(JSON.stringify(data));
 
-  // await jackPot.getValidatorsInfo();
+  // const info = await jackPot.getValidatorsInfo();
+  // const validators = await jackPot.getAllValidators(info.validatorsCount);
+  // console.log(validators);
 
-  await jackPot.checkStakerOut();
+  // await jackPot.checkStakerOut();
+
+  // await jackPot.setValidator("0x2d0e7c0813a51d3bd1d08246af2a8a7a57d8922e");
 
 }, 0);
 
