@@ -9,10 +9,7 @@ const robotSchedules = ()=>{
   // update: The settlement robot calls this function daily to update the capital pool and settle the pending refund.
   schedule.scheduleJob('0 0 6 * * *', async () => {
     log.info('update a lottery');
-    const result = await wan.jackPot.update();
-    if (result.status === 0x1) {
-
-    }
+    await wan.jackPot.update();
   }); 
 
   // open: open betting every saturday morning
