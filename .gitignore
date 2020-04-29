@@ -3,3 +3,4 @@
 /log/
 /.env.my
 /my.js
+/lib/data/validatorsState.json
