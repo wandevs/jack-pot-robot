@@ -33,6 +33,7 @@ log.info("test");
 setTimeout( async () => {
   // log.info(await getBalance(process.env.JACKPOT_OPERATOR_ADDRESS));
 
+  const a = await jackPot.isClose();
   await jackPot.open();
   await jackPot.buy([1], [1000]);
   await jackPot.update();
@@ -41,6 +42,7 @@ setTimeout( async () => {
   await jackPot.close();
   await jackPot.lotterySettlement();
   await jackPot.redeem([1]);
+
 
 
   // await jackPot.balanceCheck();
