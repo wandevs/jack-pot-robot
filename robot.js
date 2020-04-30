@@ -1,7 +1,6 @@
 const schedule = require('node-schedule');
-const log4js = require('log4js').configure('./config/log4js.json');
-const log = log4js.getLogger("app");
-const wan = require('./lib/wanchain');
+const log = require('./lib/log');
+const jackPot = require('./lib/jackPot');
 const sendMail = require('./lib/email');
 
 
@@ -9,44 +8,44 @@ const robotSchedules = ()=>{
   // update: The settlement robot calls this function daily to update the capital pool and settle the pending refund.
   schedule.scheduleJob('0 0 6 * * *', async () => {
     log.info('update a lottery');
-    await wan.jackPot.update();
+    await jackPot.update();
   }); 
 
   // open: open betting every saturday morning
   schedule.scheduleJob('0 0 8 * * 6', async () => {
     log.info('open a new lottery');
-    await wan.jackPot.open();
+    await jackPot.open();
   }); 
 
   // close: is called regularly by the robot on 4 nights a week to close bets.
   schedule.scheduleJob('0 0 7 * * 5', async () => {
     log.info('close current lottery');
-    await wan.jackPot.close();
+    await jackPot.close();
   });
 
   // runDelegateIn: After the settlement is completed, the settlement robot will call this function to conduct POS delegation to the funds in the capital pool that meet the proportion of the commission.
   schedule.scheduleJob('0 0 20 * * *', async () => {
     // check delegate total amount, when > 20000 wan, change validator, if use validators > 5, delegateOut one
-    const success = await wan.jackPot.chooseValidator();
+    const success = await jackPot.chooseValidator();
     log.info('runDelegateIn current lottery');
     if (success) {
-      await wan.jackPot.runDelegateIn();
+      await jackPot.runDelegateIn();
     }
   });
 
   // Lottery settlement:  On the Friday night, the robot calls this function to get random Numbers and complete the lucky draw process.
   schedule.scheduleJob('0 0 19 * * 5', async () => {
     log.info('settlement current lottery');
-    await wan.jackPot.lotterySettlement();
+    await jackPot.lotterySettlement();
   });
 
   // check contract address's balance >= positive pool's balance per minute
-  schedule.scheduledJobs('30 * * * * *', async () => {
-    const isClose = await wan.jackPot.isClose();
+  schedule.scheduleJob('30 * * * * *', async () => {
+    const isClose = await jackPot.isClose();
     if (isClose) {
       return;
     }
-    const success = await wan.jackPot.balanceCheck();
+    const success = await jackPot.balanceCheck();
     if (!success) {
       // send a mail
       await sendMail("balance error", "demandDepositPool > contract's balance");
@@ -56,9 +55,9 @@ const robotSchedules = ()=>{
   });
 
   // daily check if a validator want to exit, send a email, and delegateOut
-  schedule.scheduledJobs('0 0 24 * * *', async () => {
+  schedule.scheduleJob('0 0 24 * * *', async () => {
     log.info('check validator exit');
-    await wan.jackPot.checkStakerOut();
+    await jackPot.checkStakerOut();
   });
 
   //
