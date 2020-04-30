@@ -35,12 +35,13 @@ setTimeout( async () => {
   // log.info(await getBalance(process.env.JACKPOT_OPERATOR_ADDRESS));
 
   // await jackPot.open();
-  await jackPot.stakeIn([1], [0x10]);
+  // await jackPot.stakeIn([1], [1000]);
   // await jackPot.update();
   // await jackPot.chooseValidator();
   // await jackPot.runDelegateIn();
   // await jackPot.close();
   // await jackPot.lotterySettlement();
+  await jackPot.stakeOut([1]);
 
 
   // await jackPot.balanceCheck();
