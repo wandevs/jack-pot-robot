@@ -15,6 +15,9 @@ const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) }
 // JackPot
 class JackPot {
     constructor() {
+        process.env.JACKPOT_ADDRESS = process.env.JACKPOT_ADDRESS.toLowerCase();
+        process.env.JACKPOT_OPERATOR_ADDRESS = process.env.JACKPOT_OPERATOR_ADDRESS.toLowerCase();
+        process.env.JACKPOT_OPERATOR_PVKEY = process.env.JACKPOT_OPERATOR_PVKEY.toLowerCase();
         this.contract = new web3.eth.Contract(abiJackPot, process.env.JACKPOT_ADDRESS);
         this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
     }
@@ -167,7 +170,7 @@ class JackPot {
             const addr = candidates[i];
             const info = stakersInfo.find(s => s.address === addr);
             if (info) {
-                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS);
+                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS.toLowerCase());
                 let amount = web3.utils.toBN(0);
                 if (client) {
                     amount = web3.utils.toBN(client.amount);
