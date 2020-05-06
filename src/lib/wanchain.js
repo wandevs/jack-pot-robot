@@ -1,7 +1,7 @@
 const path = require('path');
 const WanTx = require('wanchainjs-tx');
 const log = require('./log');
-require("dotenv").config({path: path.resolve(__dirname, '.env.local') });
+// require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const Web3 = require("web3");
 
 /////////////////////////////////////////////////////////
@@ -9,7 +9,7 @@ const Web3 = require("web3");
 class WanChain {
   constructor() {
     this.web3 = new Web3(new Web3.providers.HttpProvider(process.env.RPC_URL));
-    this.web3.pos = new (require('./wanchain_pos'))(this.web3);
+    this.web3.pos = new (require('./wanchain-pos'))(this.web3);
   }
 
   sendRawTxByWeb3(singedData) {

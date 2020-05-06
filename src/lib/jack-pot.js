@@ -1,12 +1,12 @@
 const path = require('path');
-const abiJackPot = require('../abis/JacksPot');
+const abiJackPot = require('../../abis/JacksPot');
 const log = require('./log');
 const myValidators = require('./validators');
 const wanChain = require('./wanchain').wanChain;
 const web3 = require('./wanchain').web3;
 log.info("lib wan chain init");
 
-require("dotenv").config({path: path.resolve(__dirname, '.env.local') });
+// require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const email = require('./email');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
@@ -21,10 +21,10 @@ class JackPot {
 
     //////////
     // robot operator
-    async doOperator(opName, data, value, count = 7) {
+    async doOperator(opName, data, value, count = 7, privateKey = process.env.JACKPOT_OPERATOR_PVKEY, address = process.env.JACKPOT_OPERATOR_ADDRESS) {
         log.debug(`do operator: ${opName}`);
-        const nonce = await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS);
-        const rawTx = wanChain.signTx(nonce, data, process.env.JACKPOT_OPERATOR_PVKEY, value);
+        const nonce = await wanChain.getTxCount(address);
+        const rawTx = wanChain.signTx(nonce, data, privateKey, value);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`${opName} hash: ${txHash}`);
         let receipt = null;

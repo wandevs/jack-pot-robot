@@ -4,7 +4,7 @@ const nodeMailer = require('nodemailer');
 const log = require('./log');
 log.info("lib email init");
 
-require("dotenv").config({path: `${__dirname}/../.env.local`});
+// require("dotenv").config({path: `${__dirname}/../../.env.local`});
 
 let transporter = nodeMailer.createTransport({
     // host: 'smtp.ethereal.email',

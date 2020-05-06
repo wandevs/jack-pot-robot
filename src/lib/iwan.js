@@ -1,5 +1,5 @@
 const iWanClient = require('iwan-sdk');
-require("dotenv").config({path: __dirname + '/../.env.local'});
+// require("dotenv").config({path: `${__dirname}/../../.env.local`});
 
 //Subject to https://iwan.wanchain.org
 const option = {

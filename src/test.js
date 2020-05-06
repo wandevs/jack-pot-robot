@@ -21,7 +21,7 @@
 
 const log = require('./lib/log');
 require('./lib/email');
-const jackPot = require('./lib/jackPot');
+const jackPot = require('./lib/jack-pot');
 const pos = require('./lib/wanchain').pos;
 const web3 = require('web3');
 const sendMail = require('./lib/email');

@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run lint",
+    "my_local": "node -r dotenv/config src/my.js dotenv_config_path=.env.local",
+    "robot_local": "node -r dotenv/config src/robot.js dotenv_config_path=.env.local",
+    "test_local": "node -r dotenv/config src/test.js dotenv_config_path=.env.local",
+    "lint": "eslint ./src",
+    "test": "nyc mocha"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +23,14 @@
     "nodemailer": "^6.4.6",
     "wanchainjs-tx": "^1.5.0",
     "web3": "^1.2.6"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "mocha": "^7.1.2",
+    "nyc": "^15.0.1"
   }
 }

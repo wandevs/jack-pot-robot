@@ -1,5 +1,6 @@
 const log4js = require('log4js');
-log4js.configure(__dirname + '/config/log4js.json');
+const config = require('../../config/log4js.js');
+log4js.configure(config);
 
 const log = log4js.getLogger("app");
 
