@@ -1,3 +1,4 @@
 #!/bin/bash
 
-npm run my_local
+cd "$(dirname "$0")"
+npm run robot_local
