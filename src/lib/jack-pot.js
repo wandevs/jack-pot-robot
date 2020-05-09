@@ -216,8 +216,12 @@ class JackPot {
 
     async subsidyIn(amount) {
       const data = this.contract.methods.subsidyIn().encodeABI();
-      const total = web3.utils.toWei(web3.utils.toBN(amount));
-      return await this.doOperator(this.subsidyIn.name, data, '0x' + total.toString('hex'));
+      // const total = web3.utils.toWei(web3.utils.toBN(amount));
+      return await this.doOperator(this.subsidyIn.name, data, '0x' + amount.toString('hex'));
+    }
+
+    async getPendingAmount() {
+      return await this.contract.methods.getPendingAmount().call();
     }
 
   parseEventLotteryLog(log) {

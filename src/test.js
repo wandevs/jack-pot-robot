@@ -146,7 +146,10 @@ setTimeout( async () => {
   await jackPot.update();
   await jackPot.chooseValidator();
   await jackPot.runDelegateIn();
-  // await jackPot.subsidyIn(17000);
+  const amount = web3.utils.toBN(await jackPot.getPendingAmount());
+  if (amount > 0) {
+    await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
+  }
   await testLottery();
   await jackPot.open();
   await jackPot.redeem([1]);
