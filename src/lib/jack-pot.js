@@ -213,6 +213,16 @@ class JackPot {
         const data = this.contract.methods.redeem(codes).encodeABI();
         return await this.doOperator(this.redeem.name, data);
     }
+
+    async subsidyIn(amount) {
+      const data = this.contract.methods.subsidyIn().encodeABI();
+      const total = web3.utils.toWei(web3.utils.toBN(amount));
+      return await this.doOperator(this.subsidyIn.name, data, '0x' + total.toString('hex'));
+    }
+
+  parseEventLotteryLog(log) {
+    return this.contract._decodeEventABI(log);
+  }
 }
 
 const jackPot = new JackPot();
