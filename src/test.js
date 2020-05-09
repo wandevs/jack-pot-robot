@@ -18,13 +18,12 @@
 // │ │ └─────────────── hour (0 - 23)
 // │ └──────────────────── minute (0 - 59)
 // └───────────────────────── second (0 - 59, OPTIONAL)
-
+require("dotenv").config({path: `${__dirname}/../.env.local`});
 const log = require('./lib/log');
 require('./lib/email');
 const jackPot = require('./lib/jack-pot');
-const pos = require('./lib/wanchain').pos;
-const web3 = require('web3');
-const sendMail = require('./lib/email');
+const wanChain = require('./lib/wanchain').wanChain;
+const web3 = require('./lib/wanchain').web3;
 
 log.info("test");
 
@@ -39,9 +38,21 @@ setTimeout( async () => {
   await jackPot.update();
   await jackPot.chooseValidator();
   await jackPot.runDelegateIn();
-  await jackPot.close();
-  await jackPot.lotterySettlement();
-  await jackPot.redeem([1]);
+
+  // wait until nearly next epoch
+  const curEpochID = await web3.pos.getEpochID();
+  const curEpochStartTime = await web3.pos.getTimeByEpochID(curEpochID);
+  const nextEpochStartTime = await web3.pos.getTimeByEpochID(curEpochID + 1);
+  const randomGenerateTime = (nextEpochStartTime - curEpochStartTime) * 10/12 + curEpochStartTime;
+  const now = new Date().getTime() / 1000;
+  const waitTime = now > randomGenerateTime ? 0 : randomGenerateTime - now;
+
+  setTimeout(async () => {
+    await jackPot.close();
+    await jackPot.lotterySettlement();
+    await jackPot.open();
+    await jackPot.redeem([1]);
+  }, waitTime * 1000);
 
 
 

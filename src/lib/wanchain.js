@@ -32,6 +32,10 @@ class WanChain {
     return await this.web3.eth.getTransactionCount(addr);
   };
 
+  async unlockAccount(addr, password, duration) {
+    return await this.web3.eth.personal.unlockAccount(addr, password, duration);
+  }
+
   async getBalance(addr) {
     return await this.web3.eth.getBalance(addr);
   };
