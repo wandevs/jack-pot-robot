@@ -140,7 +140,7 @@ async function testLottery() {
   }
 }
 
-setTimeout( async () => {
+async function testCore() {
   await jackPot.open();
   await jackPot.buy([1], [1000]);
   await jackPot.update();
@@ -153,5 +153,17 @@ setTimeout( async () => {
   await testLottery();
   await jackPot.open();
   await jackPot.redeem([1]);
+}
+
+setTimeout( async () => {
+  await testCore();
+  setTimeout( async () => {
+    await testCore();
+    setTimeout( async () => {
+      await testCore();
+    }, 0);
+  }, 0);
 }, 0);
+
+
 
