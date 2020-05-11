@@ -112,9 +112,9 @@ function parseLotteryResult(_logs) {
 }
 
 async function testLottery() {
-  const curEpochID = await web3.pos.getEpochID();
-  const curEpochStartTime = await web3.pos.getTimeByEpochID(curEpochID);
-  const nextEpochStartTime = await web3.pos.getTimeByEpochID(curEpochID + 1);
+  const curEpochID = await wanChain.getEpochID();
+  const curEpochStartTime = await wanChain.getTimeByEpochID(curEpochID);
+  const nextEpochStartTime = await wanChain.getTimeByEpochID(curEpochID + 1);
   const randomGenerateTime = (nextEpochStartTime - curEpochStartTime) * 10/12 + curEpochStartTime;
   let now = new Date().getTime() / 1000;
   const waitTime = now > randomGenerateTime ? 0 : randomGenerateTime - now;
@@ -131,7 +131,7 @@ async function testLottery() {
 
   log.info("begin check win code");
   // check winner code
-  const currentRandom = web3.utils.toBN(await web3.pos.getRandom(curEpochID + 1, -1)).toString(10);
+  const currentRandom = web3.utils.toBN(await wanChain.getRandom(curEpochID + 1, -1)).toString(10);
   log.info(`random = ${currentRandom}`);
   const ev = parseLotteryResult(logs);
   const winCode = parseInt(currentRandom.substr(currentRandom.length - 4));
@@ -164,6 +164,16 @@ setTimeout( async () => {
     }, 0);
   }, 0);
 }, 0);
+
+// const iWan = require('./lib/iwan');
+// setTimeout( async () => {
+//   console.log(`balance = ${await iWan.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
+//   console.log(`nonce = ${await iWan.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
+//   console.log(`blockNumber =${await iWan.getBlockNumber()}`);
+//   console.log(`stake Info =${JSON.stringify(await iWan.getStakerInfo(await iWan.getBlockNumber()))}`);
+//   console.log(`getTransactionReceipt  = ${JSON.stringify(await iWan.getTransactionReceipt("0xac729228dc13ec59e84d51936a615ea7ab85bbe9489db0268af594d0c3ecba4c"))}`);
+//   await iWan.apiClient.close();
+// }, 0);
 
 
 

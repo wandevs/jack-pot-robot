@@ -1,12 +1,13 @@
-const path = require('path');
+// const path = require('path');
+// require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const abiJackPot = require('../../abis/JacksPot');
 const log = require('./log');
 const myValidators = require('./validators');
-const wanChain = require('./wanchain').wanChain;
-const web3 = require('./wanchain').web3;
+const wanHelper = require('./wanchain-helper');
+const wanChain = require(`./${process.env.CHAIN_ENGINE}`).wanChain;
+const web3 = require(`./${process.env.CHAIN_ENGINE}`).web3;
 log.info("lib wan chain init");
 
-// require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const email = require('./email');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
@@ -18,6 +19,7 @@ class JackPot {
         process.env.JACKPOT_ADDRESS = process.env.JACKPOT_ADDRESS.toLowerCase();
         process.env.JACKPOT_OPERATOR_ADDRESS = process.env.JACKPOT_OPERATOR_ADDRESS.toLowerCase();
         process.env.JACKPOT_OPERATOR_PVKEY = process.env.JACKPOT_OPERATOR_PVKEY.toLowerCase();
+
         this.contract = new web3.eth.Contract(abiJackPot, process.env.JACKPOT_ADDRESS);
         this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
     }
@@ -27,14 +29,14 @@ class JackPot {
     async doOperator(opName, data, value, count = 7, privateKey = process.env.JACKPOT_OPERATOR_PVKEY, address = process.env.JACKPOT_OPERATOR_ADDRESS) {
         log.debug(`do operator: ${opName}`);
         const nonce = await wanChain.getTxCount(address);
-        const rawTx = wanChain.signTx(nonce, data, privateKey, value);
+        const rawTx = wanHelper.signTx(nonce, data, privateKey, value);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`${opName} hash: ${txHash}`);
         let receipt = null;
         let tryTimes = 0;
         do {
             await sleep(5000);
-            receipt = await web3.eth.getTransactionReceipt(txHash);
+            receipt = await wanChain.getTransactionReceipt(txHash);
             tryTimes ++;
         } while (!receipt && tryTimes < count);
         if (!receipt) {

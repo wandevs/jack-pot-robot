@@ -1,6 +1,5 @@
-const path = require('path');
-const WanTx = require('wanchainjs-tx');
-const log = require('./log');
+// const path = require('path');
+// const log = require('./log');
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const Web3 = require("web3");
 
@@ -44,29 +43,27 @@ class WanChain {
     return await this.web3.eth.getBlockNumber();
   };
 
-  signTx(nonce, data, prvKey, value='0x00') {
-    const txParams = {
-      Txtype: 0x01,
-      nonce: nonce,
-      gasPrice: process.env.GASPRICE,
-      gasLimit: process.env.GASLIMIT,
-      to: process.env.JACKPOT_ADDRESS,
-      value: value,
-      data: data,
-      chainId: parseInt(process.env.CHAIN_ID, 16),
-    };
-    log.info(JSON.stringify(txParams));
-    const privateKey = Buffer.from(prvKey, 'hex');
+  async getTransactionReceipt(txHash) {
+    return await this.web3.eth.getTransactionReceipt(txHash);
+  }
 
-    const tx = new WanTx(txParams);
-    tx.sign(privateKey);
-    const serializedTx = tx.serialize();
-    return '0x' + serializedTx.toString('hex');
-  };
-
-  async getStakerInfo (blockNumber) {
+  async getStakerInfo(blockNumber) {
     return await this.web3.pos.getStakerInfo(blockNumber);
   };
+
+  ///////////////////////////////////////////////////////////
+  // those are for test
+  async getRandom(epochId, blockNumber) {
+    return await this.web3.pos.getRandom(epochId, blockNumber);
+  }
+
+  async getEpochID() {
+    return await this.web3.pos.getEpochID();
+  }
+
+  async getTimeByEpochID(epochId) {
+    return await this.web3.pos.getTimeByEpochID(epochId);
+  }
 }
 
 const wanChain = new WanChain();
