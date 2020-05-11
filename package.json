@@ -8,6 +8,7 @@
     "my_local": "node -r dotenv/config src/my.js dotenv_config_path=.env.local",
     "robot_local": "node -r dotenv/config src/robot.js dotenv_config_path=.env.local",
     "test_local": "node -r dotenv/config src/test.js dotenv_config_path=.env.local",
+    "robot_testnet": "node -r dotenv/config src/robot.js dotenv_config_path=.env.local",
     "lint": "eslint ./src",
     "test": "nyc mocha"
   },

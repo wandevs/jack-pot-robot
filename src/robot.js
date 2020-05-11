@@ -20,7 +20,7 @@ const robotSchedules = ()=>{
   });
 
   // open: open betting every saturday morning
-  schedule.scheduleJob('0 0 8 * * 6', async () => {
+  schedule.scheduleJob('0 0 8 * * *', async () => {
     log.info('open a new lottery');
     try {
       await jackPot.open();
@@ -30,7 +30,7 @@ const robotSchedules = ()=>{
   });
 
   // close: is called regularly by the robot on 4 nights a week to close bets.
-  schedule.scheduleJob('0 0 8 * * 5', async () => {
+  schedule.scheduleJob('0 0 8 * * *', async () => {
     log.info('close current lottery');
     try {
       await jackPot.close();
@@ -63,7 +63,7 @@ const robotSchedules = ()=>{
   });
 
   // Lottery settlement:  On the Friday night, the robot calls this function to get random Numbers and complete the lucky draw process.
-  schedule.scheduleJob('0 0 7 * * 6', async () => {
+  schedule.scheduleJob('0 0 7 * * *', async () => {
     log.info('settlement current lottery');
     try {
       await jackPot.lotterySettlement();

@@ -1,8 +1,6 @@
 // lowerCase
 const validators = [
-    "0x23fc2eda99667fd3df3caa7ce7e798d94eec06eb",
-    "0x435b316a70cdb8143d56b3967aacdb6392fd6125",
-    "0x2d0e7c0813a51d3bd1d08246af2a8a7a57d8922e",
+    "0xa4626e2bb450204c4b34bcc7525e585e8f678c0d",
 ];
 module.exports = validators;
 // pos.getStakerInfo(74326)
