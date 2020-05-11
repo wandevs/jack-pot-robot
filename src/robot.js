@@ -103,5 +103,10 @@ const robotSchedules = ()=>{
 
 };
 
-log.info('running robot');
+const startTime = new Date();
+log.info('robot start');
+setTimeout(async () => {
+  await sendMail('robot start', `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
+}, 0);
+
 robotSchedules();
