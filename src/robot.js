@@ -10,7 +10,7 @@ async function logAndSendMail(subject, content) {
 
 const robotSchedules = ()=>{
   // update: The settlement robot calls this function daily to update the capital pool and settle the pending refund.
-  schedule.scheduleJob('0 0 6 * * *', async () => {
+  schedule.scheduleJob('0 0 5 * * *', async () => {
     log.info('update a lottery');
     try {
       await jackPot.update();
@@ -30,7 +30,7 @@ const robotSchedules = ()=>{
   });
 
   // close: is called regularly by the robot on 4 nights a week to close bets.
-  schedule.scheduleJob('0 0 8 * * *', async () => {
+  schedule.scheduleJob('0 0 6 * * *', async () => {
     log.info('close current lottery');
     try {
       await jackPot.close();
@@ -40,12 +40,12 @@ const robotSchedules = ()=>{
   });
 
   // runDelegateIn: After the settlement is completed, the settlement robot will call this function to conduct POS delegation to the funds in the capital pool that meet the proportion of the commission.
-  schedule.scheduleJob('0 0 7 * * *', async () => {
+  schedule.scheduleJob('0 30 6 * * *', async () => {
     // check delegate total amount, when > 20000 wan, change validator, if use validators > 5, delegateOut one
     let success = true;
     try {
       log.info('chooseValidator');
-      await jackPot.chooseValidator();
+      success = await jackPot.chooseValidator();
     } catch (e) {
       await logAndSendMail("chooseValidator exception", e)
     }
@@ -92,7 +92,7 @@ const robotSchedules = ()=>{
   });
 
   // daily check if a validator want to exit, send a email, and delegateOut
-  schedule.scheduleJob('0 0 5 * * *', async () => {
+  schedule.scheduleJob('0 30 4 * * *', async () => {
     log.info('check validator exit');
     try {
       await jackPot.checkStakerOut();
