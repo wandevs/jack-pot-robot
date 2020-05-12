@@ -105,7 +105,7 @@ class JackPot {
     }
 
     async isClose() {
-        return await this.wanChain.getScVar("closed", this.contract, abiJackPot);
+        return await wanChain.getScVar("closed", this.contract, abiJackPot);
     }
 
     async runDelegateOut(validatorAddr) {
