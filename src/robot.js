@@ -10,7 +10,7 @@ async function logAndSendMail(subject, content) {
 
 const robotSchedules = ()=>{
   // update: The settlement robot calls this function daily to update the capital pool and settle the pending refund.
-  schedule.scheduleJob('0 0 5 * * *', async () => {
+  schedule.scheduleJob('10 * * * * *', async () => {
     log.info('update a lottery');
     try {
       await jackPot.update();
@@ -40,7 +40,7 @@ const robotSchedules = ()=>{
   });
 
   // runDelegateIn: After the settlement is completed, the settlement robot will call this function to conduct POS delegation to the funds in the capital pool that meet the proportion of the commission.
-  schedule.scheduleJob('0 30 6 * * *', async () => {
+  schedule.scheduleJob('0 20 * * * *', async () => {
     // check delegate total amount, when > 20000 wan, change validator, if use validators > 5, delegateOut one
     let success = true;
     try {
@@ -92,7 +92,7 @@ const robotSchedules = ()=>{
   });
 
   // daily check if a validator want to exit, send a email, and delegateOut
-  schedule.scheduleJob('0 30 4 * * *', async () => {
+  schedule.scheduleJob('0 40 * * * *', async () => {
     log.info('check validator exit');
     try {
       await jackPot.checkStakerOut();
@@ -103,10 +103,10 @@ const robotSchedules = ()=>{
 
 };
 
-const startTime = new Date();
 log.info('robot start');
+const startTime = new Date();
 setTimeout(async () => {
-  await sendMail('robot start', `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
+  await sendMail("testnet Jack's Pot robot start", `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
 }, 0);
 
 robotSchedules();
