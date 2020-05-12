@@ -115,9 +115,8 @@ class JackPot {
 
     async getValidatorsInfo() {
         const infos = await wanChain.getScVar("validatorsInfo", this.contract, abiJackPot);
+        log.info(JSON.stringify(infos));
         infos.validatorsCount = parseInt(infos.validatorsCount);
-        infos.currentValidator = infos.currentValidator.toLowerCase();
-        infos.withdrawFromValidator = infos.withdrawFromValidator.toLowerCase();
         return infos;
     }
 
@@ -172,7 +171,7 @@ class JackPot {
             const addr = candidates[i];
             const info = stakersInfo.find(s => s.address === addr);
             if (info) {
-                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS.toLowerCase());
+                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS);
                 let amount = web3.utils.toBN(0);
                 if (client) {
                     amount = web3.utils.toBN(client.amount);

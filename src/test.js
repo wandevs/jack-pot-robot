@@ -185,6 +185,8 @@ setTimeout( async () => {
 
   const success = await jackPot.balanceCheck();
   console.log(success);
+
+  await jackPot.getValidatorsInfo();
   await wanChain.closeEngine();
 }, 0);
 
