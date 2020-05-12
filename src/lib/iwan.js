@@ -40,12 +40,27 @@ class IWan {
     return await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
   }
 
+  web0toweb1(name, result, contract) {
+    if (result instanceof Array) {
+      const method = contract.methods[name]();
+      const rt = {};
+      for (let i=0; i<method._method.outputs.length; i++) {
+        rt[i] = result[i];
+        rt[method._method.outputs[i].name] = result[i];
+      }
+      return rt;
+    } else {
+      return result;
+    }
+  }
   async getScVar(name, contract, abi) {
-    return await this.apiClient.getScVar(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, abi);
+    const result = await this.apiClient.getScVar(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, abi);
+    return this.web0toweb1(name, result, contract);
   }
 
   async getScFun(name, args, contract, abi) {
-    return await this.apiClient.callScFunc(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, args, abi)
+    const result = await this.apiClient.callScFunc(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, args, abi);
+    return this.web0toweb1(name, result, contract);
   }
 
   async getBlockNumber() {

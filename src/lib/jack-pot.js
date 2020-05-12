@@ -99,9 +99,9 @@ class JackPot {
     /////////////////////////
     // logical check contractBalance should bigger than poolInfo.demandDepositPool
     async balanceCheck() {
-        const contractBalance = web3.utils.toBN(await wanChain.getBalance(process.env.JACKPOT_ADDRESS));
-        const activePoolBalance = web3.utils.toBN((await wanChain.getScVar("poolInfo", this.contract, abiJackPot))[3]);
-        return contractBalance.cmp(activePoolBalance) >= 0;
+      const contractBalance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
+      const poolInfo = await wanChain.getScVar("poolInfo", this.contract, abiJackPot);
+      return web3.utils.toBN(contractBalance).cmp(web3.utils.toBN(poolInfo.demandDepositPool)) >= 0;
     }
 
     async isClose() {
@@ -115,8 +115,9 @@ class JackPot {
 
     async getValidatorsInfo() {
         const infos = await wanChain.getScVar("validatorsInfo", this.contract, abiJackPot);
-        log.info(JSON.stringify(infos));
         infos.validatorsCount = parseInt(infos.validatorsCount);
+        infos.currentValidator = infos.currentValidator.toLowerCase();
+        infos.withdrawFromValidator = infos.withdrawFromValidator.toLowerCase();
         return infos;
     }
 
@@ -171,7 +172,7 @@ class JackPot {
             const addr = candidates[i];
             const info = stakersInfo.find(s => s.address === addr);
             if (info) {
-                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS);
+                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS.toLowerCase());
                 let amount = web3.utils.toBN(0);
                 if (client) {
                     amount = web3.utils.toBN(client.amount);

@@ -170,7 +170,7 @@ async function testCore() {
 setTimeout( async () => {
   // console.log(`balance = ${await wanChain.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
   // console.log(`nonce = ${await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
-  // const p = await wanChain.getScFun("getPendingAmount", [], jackPot.contract, abiJackPot);
+  const p = await wanChain.getScFun("getPendingAmount", [], jackPot.contract, abiJackPot);
   // // console.log(`blockNumber =${await wanChain.getBlockNumber()}`);
   // // console.log(`stake Info =${JSON.stringify(await wanChain.getStakerInfo(await wanChain.getBlockNumber()))}`);
   // // console.log(`getTransactionReceipt  = ${JSON.stringify(await wanChain.getTransactionReceipt("0xac729228dc13ec59e84d51936a615ea7ab85bbe9489db0268af594d0c3ecba4c"))}`);
