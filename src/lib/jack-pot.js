@@ -99,9 +99,9 @@ class JackPot {
     /////////////////////////
     // logical check contractBalance should bigger than poolInfo.demandDepositPool
     async balanceCheck() {
-        const contractBalance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
-        const poolInfo = await wanChain.getScVar("poolInfo", this.contract, abiJackPot);
-        return contractBalance >= poolInfo.demandDepositPool;
+        const contractBalance = web3.utils.toBN(await wanChain.getBalance(process.env.JACKPOT_ADDRESS));
+        const activePoolBalance = web3.utils.toBN((await wanChain.getScVar("poolInfo", this.contract, abiJackPot))[3]);
+        return contractBalance.cmp(activePoolBalance) >= 0;
     }
 
     async isClose() {
