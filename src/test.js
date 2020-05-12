@@ -18,12 +18,13 @@
 // │ │ └─────────────── hour (0 - 23)
 // │ └──────────────────── minute (0 - 59)
 // └───────────────────────── second (0 - 59, OPTIONAL)
-require("dotenv").config({path: `${__dirname}/../.env.local`});
+// require("dotenv").config({path: `${__dirname}/../.env.testnet`});
 const log = require('./lib/log');
 require('./lib/email');
 const jackPot = require('./lib/jack-pot');
-const wanChain = require('./lib/wanchain').wanChain;
-const web3 = require('./lib/wanchain').web3;
+const wanChain = require(`./lib/${process.env.CHAIN_ENGINE}`).wanChain;
+const web3 = require(`./lib/${process.env.CHAIN_ENGINE}`).web3;
+const abiJackPot = require('../abis/JacksPot');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
@@ -142,38 +143,49 @@ async function testLottery() {
 
 async function testCore() {
   await jackPot.open();
-  await jackPot.buy([1], [1000]);
-  await jackPot.update();
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  const amount = web3.utils.toBN(await jackPot.getPendingAmount());
-  if (amount > 0) {
-    await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
-  }
-  await testLottery();
-  await jackPot.open();
-  await jackPot.redeem([1]);
+  // await jackPot.buy([1], [1000]);
+  // await jackPot.update();
+  // await jackPot.chooseValidator();
+  // await jackPot.runDelegateIn();
+  // const amount = web3.utils.toBN(await jackPot.getPendingAmount());
+  // if (amount > 0) {
+  //   await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
+  // }
+  // await testLottery();
+  // await jackPot.open();
+  // await jackPot.redeem([1]);
 }
 
-setTimeout( async () => {
-  await testCore();
-  setTimeout( async () => {
-    await testCore();
-    setTimeout( async () => {
-      await testCore();
-    }, 0);
-  }, 0);
-}, 0);
-
-// const iWan = require('./lib/iwan');
 // setTimeout( async () => {
-//   console.log(`balance = ${await iWan.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
-//   console.log(`nonce = ${await iWan.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
-//   console.log(`blockNumber =${await iWan.getBlockNumber()}`);
-//   console.log(`stake Info =${JSON.stringify(await iWan.getStakerInfo(await iWan.getBlockNumber()))}`);
-//   console.log(`getTransactionReceipt  = ${JSON.stringify(await iWan.getTransactionReceipt("0xac729228dc13ec59e84d51936a615ea7ab85bbe9489db0268af594d0c3ecba4c"))}`);
-//   await iWan.apiClient.close();
+//   await testCore();
+//   // setTimeout( async () => {
+//   //   await testCore();
+//   //   setTimeout( async () => {
+//   //     await testCore();
+//   //   }, 0);
+//   // }, 0);
+//   wanChain.closeEngine();
 // }, 0);
 
+setTimeout( async () => {
+  console.log(`balance = ${await wanChain.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
+  console.log(`nonce = ${await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
+  const p = await wanChain.getScFun("getPendingAmount", [], jackPot.contract, abiJackPot);
+  // console.log(`blockNumber =${await wanChain.getBlockNumber()}`);
+  // console.log(`stake Info =${JSON.stringify(await wanChain.getStakerInfo(await wanChain.getBlockNumber()))}`);
+  // console.log(`getTransactionReceipt  = ${JSON.stringify(await wanChain.getTransactionReceipt("0xac729228dc13ec59e84d51936a615ea7ab85bbe9489db0268af594d0c3ecba4c"))}`);
 
+  // test get method
+  console.log(`getPendingAmount = ${p}`);
+  console.log(`operator = ${await wanChain.getScVar("operator", jackPot.contract, abiJackPot)}`);
+  console.log(`validatorsInfo = ${JSON.stringify(await wanChain.getScVar("validatorsInfo", jackPot.contract, abiJackPot))}`);
+  console.log(`closed = ${await wanChain.getScVar("closed", jackPot.contract, abiJackPot)}`);
+  console.log(`poolInfo = ${JSON.stringify(await wanChain.getScVar("poolInfo", jackPot.contract, abiJackPot))}`);
+  await wanChain.closeEngine();
+}, 0);
+
+
+// process.on('unhandledRejection', (err) => {
+//   console.log(err);
+// });
 

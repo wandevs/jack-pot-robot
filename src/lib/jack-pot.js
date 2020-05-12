@@ -100,12 +100,12 @@ class JackPot {
     // logical check contractBalance should bigger than poolInfo.demandDepositPool
     async balanceCheck() {
         const contractBalance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
-        const poolInfo = await this.contract.methods.poolInfo().call();
+        const poolInfo = await wanChain.getScVar("poolInfo", this.contract, abiJackPot);
         return contractBalance >= poolInfo.demandDepositPool;
     }
 
     async isClose() {
-        return await this.contract.methods.closed().call();
+        return await this.wanChain.getScVar("closed", this.contract, abiJackPot);
     }
 
     async runDelegateOut(validatorAddr) {
@@ -114,7 +114,7 @@ class JackPot {
     }
 
     async getValidatorsInfo() {
-        const infos = await this.contract.methods.validatorsInfo().call();
+        const infos = await wanChain.getScVar("validatorsInfo", this.contract, abiJackPot);
         infos.validatorsCount = parseInt(infos.validatorsCount);
         infos.currentValidator = infos.currentValidator.toLowerCase();
         infos.withdrawFromValidator = infos.withdrawFromValidator.toLowerCase();
@@ -223,8 +223,12 @@ class JackPot {
     }
 
     async getPendingAmount() {
-      return await this.contract.methods.getPendingAmount().call();
+      return await wanChain.getScFun("getPendingAmount", [], this.contract, abiJackPot);
     }
+
+  async getOperator() {
+      return await wanChain.getScVar("operator", this.contract, abiJackPot);
+  }
 
   parseEventLotteryLog(log) {
     return this.contract._decodeEventABI(log);

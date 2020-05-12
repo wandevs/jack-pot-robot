@@ -2,6 +2,7 @@
 // const log = require('./log');
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const Web3 = require("web3");
+const abiJackPot = require('../../abis/JacksPot');
 
 /////////////////////////////////////////////////////////
 // Web3
@@ -39,6 +40,14 @@ class WanChain {
     return await this.web3.eth.getBalance(addr);
   };
 
+  async getScVar(name, contract, abi) {
+    return await contract.methods[name]().call();
+  }
+
+  async getScFun(name, args, contract, abi) {
+    return await contract.methods[name]().call(...args);
+  }
+
   async getBlockNumber() {
     return await this.web3.eth.getBlockNumber();
   };
@@ -50,6 +59,9 @@ class WanChain {
   async getStakerInfo(blockNumber) {
     return await this.web3.pos.getStakerInfo(blockNumber);
   };
+
+  closeEngine() {
+  }
 
   ///////////////////////////////////////////////////////////
   // those are for test
