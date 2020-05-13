@@ -82,7 +82,7 @@ const robotSchedules = ()=>{
 
 const startTime = new Date();
 setTimeout(async () => {
-  await logAndSendMail("testnet Jack's Pot robot start", `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
+  await jackPot.logAndSendMail("testnet Jack's Pot robot start", `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
 }, 0);
 
 robotSchedules();
