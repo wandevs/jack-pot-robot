@@ -101,6 +101,7 @@ class JackPot {
     async balanceCheck() {
       const contractBalance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
       const poolInfo = await wanChain.getScVar("poolInfo", this.contract, abiJackPot);
+      console.log(`contractBalance=${contractBalance}, demandDepositPool=${poolInfo.demandDepositPool}`);
       return web3.utils.toBN(contractBalance).cmp(web3.utils.toBN(poolInfo.demandDepositPool)) >= 0;
     }
 
