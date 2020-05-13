@@ -12,7 +12,7 @@ async function logAndSendMail(subject, content, isSend = true) {
       await sendMail(subject, content);
     }
   } catch (e) {
-    log.error(`send mail failed, sub = ${subject}, content = ${content}`);
+    log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
   }
 }
 
