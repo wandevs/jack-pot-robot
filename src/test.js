@@ -167,6 +167,9 @@ async function testCore() {
 //   wanChain.closeEngine();
 // }, 0);
 
+const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
+const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
+const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
 setTimeout( async () => {
   // console.log(`balance = ${await wanChain.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
   // console.log(`nonce = ${await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
@@ -183,10 +186,12 @@ setTimeout( async () => {
   // console.log(`poolInfo = ${JSON.stringify(await wanChain.getScVar("poolInfo", jackPot.contract, abiJackPot))}`);
 
 
-  const success = await jackPot.balanceCheck();
-  console.log(success);
+  // const success = await jackPot.balanceCheck();
+  // console.log(success);
+  //
+  // await jackPot.getValidatorsInfo();
 
-  await jackPot.getValidatorsInfo();
+  await jackPot.update();
   await wanChain.closeEngine();
 }, 0);
 
