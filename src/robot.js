@@ -5,7 +5,7 @@ const sendMail = require('./lib/email');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
-async function logAndSendMail(subject, content, isSend) {
+async function logAndSendMail(subject, content, isSend = true) {
   log.error(subject + " : " + content);
   try {
     if (isSend) {
@@ -17,7 +17,7 @@ async function logAndSendMail(subject, content, isSend) {
 }
 
 
-async function doSchedule(name, isSend = true, tryTimes = process.env.JACKPOT_OPERATOR_RETRY_TIMES) {
+async function doSchedule(name, tryTimes = process.env.JACKPOT_OPERATOR_RETRY_TIMES, isSend = true) {
   log.info(`${name} begin`);
   let leftTime = parseInt(tryTimes);
 
@@ -39,7 +39,7 @@ async function doSchedule(name, isSend = true, tryTimes = process.env.JACKPOT_OP
 const robotSchedules = ()=>{
   // update: The settlement robot calls this function daily to update the capital pool and settle the pending refund.
   schedule.scheduleJob('30 */5 * * * *', async () => {
-    await doSchedule('update', "3", false);
+    await doSchedule('update', "3",false);
   });
 
   // open: open betting every saturday morning
