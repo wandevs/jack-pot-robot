@@ -44,7 +44,7 @@ class IWan {
     return await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
   }
 
-  web0toweb1(name, result, contract) {
+  web0ToWeb1(name, result, contract) {
     if (result instanceof Array) {
       const method = contract.methods[name]();
       const rt = {};
@@ -59,12 +59,12 @@ class IWan {
   }
   async getScVar(name, contract, abi) {
     const result = await this.apiClient.getScVar(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, abi);
-    return this.web0toweb1(name, result, contract);
+    return this.web0ToWeb1(name, result, contract);
   }
 
   async getScFun(name, args, contract, abi) {
     const result = await this.apiClient.callScFunc(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, args, abi);
-    return this.web0toweb1(name, result, contract);
+    return this.web0ToWeb1(name, result, contract);
   }
 
   async getBlockNumber() {

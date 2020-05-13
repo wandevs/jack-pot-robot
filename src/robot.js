@@ -1,21 +1,8 @@
 const schedule = require('node-schedule');
 const log = require('./lib/log');
 const jackPot = require('./lib/jack-pot');
-const sendMail = require('./lib/email');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
-
-async function logAndSendMail(subject, content, isSend = true) {
-  log.error(subject + " : " + content);
-  try {
-    if (isSend) {
-      await sendMail(subject, content);
-    }
-  } catch (e) {
-    log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
-  }
-}
-
 
 async function doSchedule(name, tryTimes = process.env.JACKPOT_OPERATOR_RETRY_TIMES, isSend = true) {
   log.info(`${name} begin`);
@@ -27,7 +14,7 @@ async function doSchedule(name, tryTimes = process.env.JACKPOT_OPERATOR_RETRY_TI
       return await jackPot[name]();
     } catch (e) {
       if (tryTimes === 0) {
-        await logAndSendMail(`${name} exception`, e, isSend);
+        await jackPot.logAndSendMail(`${name} exception`, e, isSend);
         return;
       }
       log.error(`${name} exception : ` + " : ${e}" );
@@ -61,7 +48,7 @@ const robotSchedules = ()=>{
       log.info('runDelegateIn current lottery');
       await doSchedule('runDelegateIn');
     } else {
-      await logAndSendMail("chooseValidator failed", "please add more validator");
+      await jackPot.logAndSendMail("chooseValidator failed", "please add more validator");
     }
   });
 
@@ -76,12 +63,13 @@ const robotSchedules = ()=>{
       log.debug('check balance');
       if(! await jackPot.isClose()) {
         if(! await jackPot.balanceCheck()) {
-          await logAndSendMail("wrong balance", "demandDepositPool > contract's balance");
+          await jackPot.logAndSendMail("wrong balance", "demandDepositPool > contract's balance");
           await close();
         }
       }
     } catch (e) {
-      await logAndSendMail("contract address balance check exception", e);
+      // await jackPot.logAndSendMail("contract address balance check exception", e);
+      log.warn("check balance exception")
     }
   });
 

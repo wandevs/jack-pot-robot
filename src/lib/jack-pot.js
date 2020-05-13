@@ -8,7 +8,7 @@ const wanChain = require(`./${process.env.CHAIN_ENGINE}`).wanChain;
 const web3 = require(`./${process.env.CHAIN_ENGINE}`).web3;
 log.info("lib wan chain init");
 
-const email = require('./email');
+const sendMail = require('./email');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
@@ -24,6 +24,16 @@ class JackPot {
         this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
     }
 
+  async logAndSendMail(subject, content, isSend = true) {
+    log.error(subject + " : " + content);
+    try {
+      if (isSend) {
+        await sendMail(subject, content);
+      }
+    } catch (e) {
+      log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+    }
+  }
     //////////
     // robot operator
     async doOperator(opName, data, value, count = 7, privateKey = process.env.JACKPOT_OPERATOR_PVKEY, address = process.env.JACKPOT_OPERATOR_ADDRESS) {
@@ -101,7 +111,6 @@ class JackPot {
     async balanceCheck() {
       const contractBalance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
       const poolInfo = await wanChain.getScVar("poolInfo", this.contract, abiJackPot);
-      console.log(`contractBalance=${contractBalance}, demandDepositPool=${poolInfo.demandDepositPool}`);
       return web3.utils.toBN(contractBalance).cmp(web3.utils.toBN(poolInfo.demandDepositPool)) >= 0;
     }
 
@@ -125,7 +134,7 @@ class JackPot {
     //  if a validator want to exit, send a email, and delegateOut
     async checkStakerOut () {
         const validatorsInfo = await this.getValidatorsInfo();
-        const validatorsAddrs = myValidators; //await this.getAllValidators(validatorsInfo.validatorsCount);
+        const validatorsAddrs = myValidators;
         const blockNumber = await wanChain.getBlockNumber();
         const stakersInfo = await wanChain.getStakerInfo(blockNumber);
 
@@ -138,19 +147,19 @@ class JackPot {
                 if (si.nextLockEpochs === 0) {
                     if (!isDelegateOut) {
                         try {
-                            await this.contract.methods.runDelegateOut(validatorsAddrs[i]);
+                            await this.runDelegateOut(validatorsAddrs[i]);
                             isDelegateOut = true;
-                            await email(subject, `${validatorsAddrs[i]} delegate out success`);
+                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out success`);
                         } catch(err) {
-                            await email(subject, `${validatorsAddrs[i]} delegate out failed : ${err}`);
+                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out failed : ${err}`);
                         }
                     } else {
-                        await email(subject, `${validatorsAddrs[i]} can't delegate out, ${validatorsInfo.withdrawFromValidator} is on delegating out`);
+                        await this.logAndSendMail(subject, `${validatorsAddrs[i]} can't delegate out, ${validatorsInfo.withdrawFromValidator} is on delegating out`);
                     }
                 }
             } else {
                 const content = `${validatorsAddrs[i]} is not a valid validator, maybe already stake out`;
-                await email(subject, content);
+                await this.logAndSendMail(subject, content);
             }
         }
     }
