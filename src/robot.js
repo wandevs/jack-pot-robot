@@ -40,7 +40,7 @@ const robotSchedules = ()=>{
   });
 
   // runDelegateIn: After the settlement is completed, the settlement robot will call this function to conduct POS delegation to the funds in the capital pool that meet the proportion of the commission.
-  schedule.scheduleJob('0 20 * * * *', async () => {
+  schedule.scheduleJob('0 */10 * * * *', async () => {
     // check delegate total amount, when > 20000 wan, change validator, if use validators > 5, delegateOut one
     const success = await doSchedule('chooseValidator');
 

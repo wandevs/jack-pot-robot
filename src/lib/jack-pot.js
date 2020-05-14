@@ -2,7 +2,6 @@
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const abiJackPot = require('../../abis/JacksPot');
 const log = require('./log');
-const myValidators = require('./validators');
 const wanHelper = require('./wanchain-helper');
 const wanChain = require(`./${process.env.CHAIN_ENGINE}`).wanChain;
 const web3 = require(`./${process.env.CHAIN_ENGINE}`).web3;
@@ -20,6 +19,7 @@ class JackPot {
         process.env.JACKPOT_OPERATOR_ADDRESS = process.env.JACKPOT_OPERATOR_ADDRESS.toLowerCase();
         process.env.JACKPOT_OPERATOR_PVKEY = process.env.JACKPOT_OPERATOR_PVKEY.toLowerCase();
 
+        this.myValidators = JSON.parse(process.env.POS_VALIDATORS);
         this.contract = new web3.eth.Contract(abiJackPot, process.env.JACKPOT_ADDRESS);
         this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
     }
@@ -134,7 +134,7 @@ class JackPot {
     //  if a validator want to exit, send a email, and delegateOut
     async checkStakerOut () {
         const validatorsInfo = await this.getValidatorsInfo();
-        const validatorsAddrs = myValidators;
+        const validatorsAddrs = this.myValidators;
         const blockNumber = await wanChain.getBlockNumber();
         const stakersInfo = await wanChain.getStakerInfo(blockNumber);
 
@@ -174,7 +174,7 @@ class JackPot {
 
         const isDelegateOut = validatorsInfo.withdrawFromValidator !== "0x0000000000000000000000000000000000000000";
 
-        let candidates = myValidators;
+        let candidates = this.myValidators;
         let validCandidates = [];
 
         // check the candidate
@@ -188,7 +188,6 @@ class JackPot {
                     amount = web3.utils.toBN(client.amount);
                 }
                 validCandidates.push({addr, amount});
-                // if amount < 20000, choose it
                 if (amount.cmp(this.perMaxAmount) === -1) {
                     await this.setValidator(addr, validatorsInfo.currentValidator);
                     return true;
@@ -200,7 +199,8 @@ class JackPot {
         if (!isDelegateOut) {
             if (validCandidates.length > 1) {
                 validCandidates.sort((a, b) => { return a.amount.cmp(b.amount);});
-                await this.runDelegateOut(validCandidates.pop().addr);
+                const outer = validCandidates.pop();
+                await this.runDelegateOut(outer.addr);
             }
         }
         if (validCandidates.length > 0) {

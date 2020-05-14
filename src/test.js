@@ -143,7 +143,27 @@ async function testLottery() {
 
 async function testCore() {
   await jackPot.open();
-  // await jackPot.buy([1], [1000]);
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
+  await jackPot.buy([1], [20000]);
+  await jackPot.chooseValidator();
+  await jackPot.runDelegateIn();
   // await jackPot.update();
   // await jackPot.chooseValidator();
   // await jackPot.runDelegateIn();
@@ -156,44 +176,38 @@ async function testCore() {
   // await jackPot.redeem([1]);
 }
 
-// setTimeout( async () => {
-//   await testCore();
-//   // setTimeout( async () => {
-//   //   await testCore();
-//   //   setTimeout( async () => {
-//   //     await testCore();
-//   //   }, 0);
-//   // }, 0);
-//   wanChain.closeEngine();
-// }, 0);
-
-const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
-const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
-const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
 setTimeout( async () => {
-  // console.log(`balance = ${await wanChain.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
-  // console.log(`nonce = ${await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
-  const p = await wanChain.getScFun("getPendingAmount", [], jackPot.contract, abiJackPot);
-  // console.log(`blockNumber =${await wanChain.getBlockNumber()}`);
-  // console.log(`stake Info =${JSON.stringify(await wanChain.getStakerInfo(await wanChain.getBlockNumber()))}`);
-  // console.log(`getTransactionReceipt  = ${JSON.stringify(await wanChain.getTransactionReceipt("0xac729228dc13ec59e84d51936a615ea7ab85bbe9489db0268af594d0c3ecba4c"))}`);
-
-  // test get method
-  console.log(`getPendingAmount = ${p}`);
-  console.log(`operator = ${await wanChain.getScVar("operator", jackPot.contract, abiJackPot)}`);
-  console.log(`validatorsInfo = ${JSON.stringify(await wanChain.getScVar("validatorsInfo", jackPot.contract, abiJackPot))}`);
-  console.log(`closed = ${await wanChain.getScVar("closed", jackPot.contract, abiJackPot)}`);
-  console.log(`poolInfo = ${JSON.stringify(await wanChain.getScVar("poolInfo", jackPot.contract, abiJackPot))}`);
-
-
-  const success = await jackPot.balanceCheck();
-  console.log(success);
-
-  await jackPot.getValidatorsInfo();
-
-  await jackPot.update();
-  await wanChain.closeEngine();
+  await testCore();
+  wanChain.closeEngine();
 }, 0);
+
+// const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
+// const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
+// const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
+// setTimeout( async () => {
+//   // console.log(`balance = ${await wanChain.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
+//   // console.log(`nonce = ${await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
+//   const p = await wanChain.getScFun("getPendingAmount", [], jackPot.contract, abiJackPot);
+//   // console.log(`blockNumber =${await wanChain.getBlockNumber()}`);
+//   // console.log(`stake Info =${JSON.stringify(await wanChain.getStakerInfo(await wanChain.getBlockNumber()))}`);
+//   // console.log(`getTransactionReceipt  = ${JSON.stringify(await wanChain.getTransactionReceipt("0xac729228dc13ec59e84d51936a615ea7ab85bbe9489db0268af594d0c3ecba4c"))}`);
+//
+//   // test get method
+//   console.log(`getPendingAmount = ${p}`);
+//   console.log(`operator = ${await wanChain.getScVar("operator", jackPot.contract, abiJackPot)}`);
+//   console.log(`validatorsInfo = ${JSON.stringify(await wanChain.getScVar("validatorsInfo", jackPot.contract, abiJackPot))}`);
+//   console.log(`closed = ${await wanChain.getScVar("closed", jackPot.contract, abiJackPot)}`);
+//   console.log(`poolInfo = ${JSON.stringify(await wanChain.getScVar("poolInfo", jackPot.contract, abiJackPot))}`);
+//
+//
+//   const success = await jackPot.balanceCheck();
+//   console.log(success);
+//
+//   await jackPot.getValidatorsInfo();
+//
+//   await jackPot.update();
+//   await wanChain.closeEngine();
+// }, 0);
 
 
 // process.on('unhandledRejection', (err) => {
