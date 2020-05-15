@@ -116,7 +116,7 @@ async function testLottery() {
   const curEpochID = await wanChain.getEpochID();
   const curEpochStartTime = await wanChain.getTimeByEpochID(curEpochID);
   const nextEpochStartTime = await wanChain.getTimeByEpochID(curEpochID + 1);
-  const randomGenerateTime = (nextEpochStartTime - curEpochStartTime) * 10/12 + curEpochStartTime;
+  const randomGenerateTime = (nextEpochStartTime - curEpochStartTime) * 11/12 + curEpochStartTime;
   let now = new Date().getTime() / 1000;
   const waitTime = now > randomGenerateTime ? 0 : randomGenerateTime - now;
 
@@ -143,42 +143,25 @@ async function testLottery() {
 
 async function testCore() {
   await jackPot.open();
-  await jackPot.buy([1], [20000]);
+  // await jackPot.buy([1], [20000]);
+  await jackPot.update();
   await jackPot.chooseValidator();
   await jackPot.runDelegateIn();
-  await jackPot.buy([1], [20000]);
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  await jackPot.buy([1], [20000]);
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  await jackPot.buy([1], [20000]);
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  await jackPot.buy([1], [20000]);
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  await jackPot.buy([1], [20000]);
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  await jackPot.buy([1], [20000]);
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
-  // await jackPot.update();
-  // await jackPot.chooseValidator();
-  // await jackPot.runDelegateIn();
   // const amount = web3.utils.toBN(await jackPot.getPendingAmount());
   // if (amount > 0) {
   //   await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
   // }
-  // await testLottery();
-  // await jackPot.open();
+  await testLottery();
+  await jackPot.open();
   // await jackPot.redeem([1]);
+
+  setTimeout( async () => {
+    await testCore();
+  }, 0);
 }
 
 setTimeout( async () => {
   await testCore();
-  wanChain.closeEngine();
 }, 0);
 
 // const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");

@@ -1,5 +1,6 @@
 const iWanClient = require('iwan-sdk');
 const Web3 = require('web3');
+const BigNumber = require("bignumber.js");
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 
 //Subject to https://iwan.wanchain.org
@@ -40,7 +41,6 @@ class IWan {
 
   async getBalance(addr) {
     const balance = await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
-    console.log(`Balance result is ${balance}`);
     return await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
   }
 
@@ -49,8 +49,14 @@ class IWan {
       const method = contract.methods[name]();
       const rt = {};
       for (let i=0; i<method._method.outputs.length; i++) {
-        rt[i] = result[i];
-        rt[method._method.outputs[i].name] = result[i];
+        const rtType = method._method.outputs[i].type;
+        // web0.20 === delegatePool = "1.05e+21", BN not support
+        if (rtType === "uint256" || rtType === "uint") {
+          rt[i] = new BigNumber(result[i]).toString(10);
+        } else {
+          rt[i] = result[i];
+        }
+        rt[method._method.outputs[i].name] = rt[i];
       }
       return rt;
     } else {
