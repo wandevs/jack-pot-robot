@@ -1,6 +1,6 @@
 // const path = require('path');
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
-const abiJackPot = require('../../abis/JacksPot');
+const abiJackPot = require('../../abi/jacks-pot');
 const log = require('./log');
 const wanHelper = require('./wanchain-helper');
 const wanChain = require(`./${process.env.CHAIN_ENGINE}`).wanChain;
@@ -213,12 +213,25 @@ class JackPot {
 
     ////////////////////////////////////////////
     /// other function for test
-    async buy(codes, amounts) {
+    // async buy(codes, amounts) {
+    //     let total = web3.utils.toBN(0);
+    //     amounts.forEach((a,index,theArray) => {const wei = web3.utils.toWei(web3.utils.toBN(a)); theArray[index] = '0x' + wei.toString('hex');  total = total.add(wei)} );
+    //     codes.forEach((a,index,theArray) => {theArray[index] = a } );
+    //     const data = this.contract.methods.buy(codes, amounts).encodeABI();
+    //     return await this.doOperator(this.buy.name, data, '0x' + total.toString('hex'));
+    // }
+
+    async buy(codes, amounts, privateKey) {
         let total = web3.utils.toBN(0);
         amounts.forEach((a,index,theArray) => {const wei = web3.utils.toWei(web3.utils.toBN(a)); theArray[index] = '0x' + wei.toString('hex');  total = total.add(wei)} );
         codes.forEach((a,index,theArray) => {theArray[index] = a } );
         const data = this.contract.methods.buy(codes, amounts).encodeABI();
-        return await this.doOperator(this.buy.name, data, '0x' + total.toString('hex'));
+        const value = '0x' + total.toString('hex');
+        const nonce = await wanChain.getTxCount(address);
+
+        const rawTx = wanHelper.signTx(nonce, data, privateKey, value);
+        const txHash = await wanChain.sendRawTxByWeb3(rawTx);
+        log.info(`${opName} hash: ${txHash}`);
     }
 
     async redeem(codes) {

@@ -1,23 +1,33 @@
 const assert = require("assert");
 
-require("dotenv").config({path: `${__dirname}/../../.env.testnet`});
-const jpApi = require("../../abis/JacksPot");
-const wanChain = require("../../src/lib/wanchain").wanChain;
+require("dotenv").config({path: `${__dirname}/../.env.testnet`});
+const jpApi = require("../abi/jacks-pot");
+const wanChain = require("../src/lib/wanchain").wanChain;
 const wanChain_contract = new wanChain.web3.eth.Contract(jpApi, process.env.JACKPOT_ADDRESS);
-const iWan = require("../../src/lib/iwan").wanChain;
+const iWan = require("../src/lib/iwan").wanChain;
 const iWan_contract = new iWan.web3.eth.Contract(jpApi, process.env.JACKPOT_ADDRESS);
-const web3 = require("../../src/lib/wanchain").web3;
+const web3 = require("../src/lib/wanchain").web3;
+const wanHelper = require('../src/lib/wanchain-helper');
+
+before(function () {
+  console.log("init jack-pot test");
+});
+after(function () {
+  iWan.closeEngine();
+  wanChain.closeEngine();
+  console.log("done test");
+});
 
 describe("iWan == wanChain test", function () {
   this.timeout(16000);
 
-  before(function () {
-    console.log("init test");
-  });
-  after(function () {
-    console.log("done test");
-    iWan.closeEngine();
-    wanChain.closeEngine();
+  it('sendRawTxByWeb3', async function() {
+    const nonce = await wanChain.getTxCount(address);
+    const rawTx = wanHelper.signTx(nonce, data, privateKey, value);
+    const txHash = await wanChain.sendRawTxByWeb3(rawTx);
+    console.log(`wanChain txHash = ${txHash}`);
+
+    const b = await iWan.sendRawTxByWeb3();
   });
 
   it('getTxCount', async function() {

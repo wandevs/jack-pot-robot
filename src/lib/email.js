@@ -1,24 +1,19 @@
-'use strict';
-
 const nodeMailer = require('nodemailer');
 const log = require('./log');
+
 log.info("lib email init");
 
-// require("dotenv").config({path: `${__dirname}/../../.env.local`});
-
-let transporter = nodeMailer.createTransport({
-    // host: 'smtp.ethereal.email',
-    service: process.env.EMAIL_SERVICE,
-    port: parseInt(process.env.EMAIL_PORT), // SMTP port
-    secureConnection: true, // 使用了 SSL
-    auth: {
-        user: process.env.EMAIL_FROM,
-        // smtp auth code
-        pass: process.env.EMAIL_AUTH_CODE,
-    }
+const transporter = nodeMailer.createTransport({
+  service: process.env.EMAIL_PORT,
+  port: parseInt(process.env.EMAIL_PORT), // SMTP port
+  secureConnection: true, // 使用了 SSL
+  auth: {
+      user: process.env.EMAIL_FROM,
+      pass: process.env.EMAIL_AUTH_CODE,
+  }
 });
 
-let mailOptions = {
+const mailOptions = {
     from: process.env.EMAIL_FROM_NAME, // sender address
     to: process.env.EMAIL_TO_NAME, // list of receivers
     subject: 'Hello', // Subject line

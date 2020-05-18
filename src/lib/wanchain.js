@@ -2,7 +2,7 @@
 // const log = require('./log');
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const Web3 = require("web3");
-const abiJackPot = require('../../abis/JacksPot');
+const abiJackPot = require('../../abi/jacks-pot');
 
 /////////////////////////////////////////////////////////
 // Web3

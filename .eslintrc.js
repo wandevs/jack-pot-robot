@@ -1,4 +1,4 @@
-{
+module.exports = {
   "env": {
     "browser": true,
     "commonjs": true,
@@ -7,7 +7,8 @@
     "mocha": true
   },
   "extends": [
-    "airbnb-base"
+    "airbnb-base",
+    "prettier"
   ],
   "globals": {
     "Atomics": "readonly",
@@ -17,5 +18,9 @@
     "ecmaVersion": 2018
   },
   "rules": {
-  }
+    "max-len": 200
+  },
+  "plugins": [
+    "prettier"
+  ]
 }
