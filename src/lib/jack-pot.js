@@ -221,7 +221,7 @@ class JackPot {
     //     return await this.doOperator(this.buy.name, data, '0x' + total.toString('hex'));
     // }
 
-    async buy(codes, amounts, privateKey) {
+    async buy(codes, amounts, privateKey, address) {
         let total = web3.utils.toBN(0);
         amounts.forEach((a,index,theArray) => {const wei = web3.utils.toWei(web3.utils.toBN(a)); theArray[index] = '0x' + wei.toString('hex');  total = total.add(wei)} );
         codes.forEach((a,index,theArray) => {theArray[index] = a } );
@@ -231,12 +231,22 @@ class JackPot {
 
         const rawTx = wanHelper.signTx(nonce, data, privateKey, value);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
-        log.info(`${opName} hash: ${txHash}`);
+        log.info(`buy hash: ${txHash}, count: ${codes.length}`);
     }
 
-    async redeem(codes) {
+    // async redeem(codes) {
+    //     const data = this.contract.methods.redeem(codes).encodeABI();
+    //     return await this.doOperator(this.redeem.name, data);
+    // }
+
+    async redeem(codes, privateKey, address) {
+        codes.forEach((a,index,theArray) => {theArray[index] = a } );
         const data = this.contract.methods.redeem(codes).encodeABI();
-        return await this.doOperator(this.redeem.name, data);
+        const nonce = await wanChain.getTxCount(address);
+
+        const rawTx = wanHelper.signTx(nonce, data, privateKey, '0x00');
+        const txHash = await wanChain.sendRawTxByWeb3(rawTx);
+        log.info(`redeem hash: ${txHash}, codes: ${JSON.stringify(codes)}`);
     }
 
     async subsidyIn(amount) {
@@ -247,6 +257,10 @@ class JackPot {
 
     async getPendingAmount() {
       return await wanChain.getScFun("getPendingAmount", [], this.contract, abiJackPot);
+    }
+
+    async getUserCodeList(address) {
+      return await wanChain.getScFun("getUserCodeList", [address], this.contract, abiJackPot);
     }
 
   async getOperator() {

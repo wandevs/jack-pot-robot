@@ -5,6 +5,7 @@ const web3 = require(`./lib/${process.env.CHAIN_ENGINE}`).web3;
 const abiJackPot = require('../abi/jacks-pot');
 const keys = require('../keys/key-pairs.json');
 const crypto = require('crypto');
+const util = require('ethereumjs-util');
 
 const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
@@ -51,6 +52,12 @@ async function testLottery() {
   let now = new Date().getTime() / 1000;
   const waitTime = now > randomGenerateTime ? 0 : randomGenerateTime - now;
 
+  if (waitTime > 50) {
+    setTimeout(async () => {
+      await customerBuyAndRedeem();
+    }, 20000);
+  }
+
   await sleep(waitTime * 1000);
 
   await jackPot.close();
@@ -73,27 +80,91 @@ async function testLottery() {
 }
 
 // select code and buy
-async function customerBuy() {
-  const randomBuf = crypto.getRandom(32);
+async function customerBuyAndRedeem() {
+  for (let j = 0; j < keys.length; j++) {
+    if (util.bufferToInt(crypto.randomBytes(6)) % 20 == 5) {
+      // 如果参与过，则退出，如果没参与过，则参与
+      const userInfo = await jackPot.getUserCodeList(keys[j].address);
+      console.log(`address = ${keys[j].address}`);
+      console.log(JSON.stringify(userInfo));
+
+      // buy or redeem
+      let isBuy = true;
+      const random = util.bufferToInt(crypto.randomBytes(6));
+      let codeCount = util.bufferToInt(crypto.randomBytes(6)) % 50 + 1;
+      if (userInfo.exits.length == 50) {
+        isBuy = false;
+      } else if (userInfo.exits.length == 0) {
+        isBuy = true;
+      } else {
+        isBuy = random % 2 == 0;
+        if (isBuy) {
+          codeCount = (50 - userInfo.exits.length) > codeCount ? codeCount : (50 - userInfo.exits.length);
+        } else {
+          codeCount = userInfo.exits.length > codeCount ? codeCount : userInfo.exits.length;
+        }
+      }
+      log.info(`try buy = ${isBuy}, doCount = ${codeCount}, oldCount = ${userInfo.exits.length}, from = ${keys[j].address}`);
+
+      try {
+        if (isBuy) {
+          const codes = [], amounts = [];
+          for (let i = 0; i < codeCount; i++) {
+            const code = util.bufferToInt(crypto.randomBytes(6)) % 10000;
+            const amount = (util.bufferToInt(crypto.randomBytes(6)) % 3 + 1) * 10;
+            codes.push(code);
+            amounts.push(amount);
+          }
+          await jackPot.buy(codes, amounts, keys[j].privateKey, keys[j].address);
+        } else {
+          const codes = [];
+          for (let i = 0; i < codeCount; i++) {
+            codes.push(parseInt(userInfo.codes[i], 10));
+          }
+          await jackPot.redeem(codes, keys[j].privateKey, keys[j].address);
+        }
+      } catch (e) {
+        log.warn(e);
+        return;
+      }
+    }
+  }
+}
+
+async function customerClean() {
+  for (let j = 0; j < keys.length; j++) {
+    const userInfo = await jackPot.getUserCodeList(keys[j].address);
+    if (userInfo.exits.length > 0) {
+      try {
+        const codes = [];
+        for (let i = 0; i < userInfo.codes.length; i++) {
+          codes.push(parseInt(userInfo.codes[i], 10));
+        }
+        await jackPot.redeem(codes, keys[j].privateKey, keys[j].address);
+      } catch (e) {
+        log.warn(e);
+        return;
+      }
+    }
+  }
 }
 
 async function testCore() {
   await jackPot.open();
-  // await jackPot.buy([1], [20000]);
+  await customerBuyAndRedeem();
   await jackPot.update();
   await jackPot.chooseValidator();
   await jackPot.runDelegateIn();
-  // const amount = web3.utils.toBN(await jackPot.getPendingAmount());
-  // if (amount > 0) {
-  //   await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
-  // }
+  const amount = web3.utils.toBN(await jackPot.getPendingAmount());
+  if (amount > 0) {
+    await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
+  }
   await testLottery();
   await jackPot.open();
-  // await jackPot.redeem([1]);
 
   setTimeout( async () => {
     await testCore();
-  }, 0);
+  }, 10000);
 }
 
 setTimeout( async () => {

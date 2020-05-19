@@ -45,7 +45,7 @@ class WanChain {
   }
 
   async getScFun(name, args, contract, abi) {
-    return await contract.methods[name]().call(...args);
+    return await contract.methods[name](...args).call();
   }
 
   async getBlockNumber() {
