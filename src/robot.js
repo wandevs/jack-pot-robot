@@ -17,7 +17,7 @@ async function doSchedule(name, tryTimes = process.env.JACKPOT_OPERATOR_RETRY_TI
         await jackPot.logAndSendMail(`${name} exception`, e, isSend);
         return;
       }
-      log.error(`${name} exception : ` + " : ${e}" );
+      log.error(`${name} exception : ${e}` );
       await sleep(parseInt(process.env.JACKPOT_OPERATOR_RETRY_INTERVAL) * 1000);
     }
   }
