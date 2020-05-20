@@ -169,7 +169,7 @@ class JackPot {
 
         const blockNumber = await wanChain.getBlockNumber();
         const stakersInfoOrigin = await wanChain.getStakerInfo(blockNumber);
-        // delete redeem validator and delegateOut validator
+        // delete redeem validator and stake out validator
         const stakersInfo = stakersInfoOrigin.filter((stakerInfo)=>{return (stakerInfo.nextLockEpochs !== 0) && (stakerInfo.address !== validatorsInfo.withdrawFromValidator)});
 
         const isDelegateOut = validatorsInfo.withdrawFromValidator !== "0x0000000000000000000000000000000000000000";
@@ -196,13 +196,14 @@ class JackPot {
         }
 
         // all failed ? choose the biggest delegate out, choose the smallest to be the candidate, if none, return false
+        validCandidates.sort((a, b) => { return a.amount.cmp(b.amount);});
         if (!isDelegateOut) {
             if (validCandidates.length > 1) {
-                validCandidates.sort((a, b) => { return a.amount.cmp(b.amount);});
                 const outer = validCandidates.pop();
                 await this.runDelegateOut(outer.addr);
             }
         }
+
         if (validCandidates.length > 0) {
             await this.setValidator(validCandidates[0].addr, validatorsInfo.currentValidator);
             return true;

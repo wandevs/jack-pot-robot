@@ -83,7 +83,6 @@ async function testLottery() {
 async function customerBuyAndRedeem() {
   for (let j = 0; j < keys.length; j++) {
     if (util.bufferToInt(crypto.randomBytes(6)) % 20 == 5) {
-      // 如果参与过，则退出，如果没参与过，则参与
       const userInfo = await jackPot.getUserCodeList(keys[j].address);
       console.log(`address = ${keys[j].address}`);
       console.log(JSON.stringify(userInfo));
