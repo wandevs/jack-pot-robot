@@ -64,7 +64,7 @@ const robotSchedules = ()=>{
       if(! await jackPot.isClose()) {
         if(! await jackPot.balanceCheck()) {
           await jackPot.logAndSendMail("wrong balance", "demandDepositPool > contract's balance");
-          await close();
+          await jackPot.close();
         }
       }
     } catch (e) {
