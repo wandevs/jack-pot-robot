@@ -18,29 +18,15 @@ class IWan {
     this.web3 = new Web3();
   }
 
-  // async sendRawTxByWeb3(singedData) {
-  //   return new Promise((resolve, reject) => {
-  //       this.apiClient.sendRawTransaction(process.env.IWAN_CHAINTYPE, singedData, (error, hash) => {
-  //         if (error) {
-  //           reject(error);
-  //         } else {
-  //           resolve(hash);
-  //         }
-  //       });
-  //   });
-  // };
-
   async sendRawTxByWeb3(singedData) {
       return await this.apiClient.sendRawTransaction(process.env.IWAN_CHAINTYPE, singedData);
   };
 
-  // TODO: return with 0x
   async getTxCount(addr) {
     return parseInt(await this.apiClient.getNonce(process.env.IWAN_CHAINTYPE, addr), 16);
   }
 
   async getBalance(addr) {
-    const balance = await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
     return await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
   }
 
