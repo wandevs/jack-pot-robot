@@ -69,7 +69,7 @@ const robotSchedules = ()=>{
       }
     } catch (e) {
       // await jackPot.logAndSendMail("contract address balance check exception", e);
-      log.warn("check balance exception")
+      log.warn("check balance exception " + e)
     }
   });
 

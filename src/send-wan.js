@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// send customers money
+// send customers WAN
 const wanChain = require(`../src/lib/${process.env.CHAIN_ENGINE}`).wanChain;
 const web3 = require(`../src/lib/${process.env.CHAIN_ENGINE}`).web3;
 const keys = require('../keys/key-pairs.json');

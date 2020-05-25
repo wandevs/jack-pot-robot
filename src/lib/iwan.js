@@ -76,6 +76,10 @@ class IWan {
       return this.apiClient.close();
     }
   }
+
+  async getBlock(blockNumber, bTxDetails) {
+    return await this.apiClient.getBlockByNumber(process.env.IWAN_CHAINTYPE, blockNumber);
+  }
   ///////////////////////////////////////////////////////////
   // those are used for test
   async getRandom(epochId, blockNumber) {
@@ -89,7 +93,6 @@ class IWan {
   async getTimeByEpochID(epochId) {
     return await this.apiClient.getTimeByEpochID(process.env.IWAN_CHAINTYPE, epochId);
   }
-
 }
 
 const iWan = new IWan();

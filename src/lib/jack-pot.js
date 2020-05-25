@@ -22,6 +22,7 @@ class JackPot {
         this.myValidators = JSON.parse(process.env.POS_VALIDATORS);
         this.contract = new web3.eth.Contract(abiJackPot, process.env.JACKPOT_ADDRESS);
         this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
+        this.createAtBlockNumber = JSON.parse(process.env.JACKPOT_BLOCKNUMBER);
     }
 
   async logAndSendMail(subject, content, isSend = true) {
