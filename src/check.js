@@ -5,6 +5,9 @@ const web3 = require(`./lib/${process.env.CHAIN_ENGINE}`).web3;
 const web3_ws = require(`./lib/${process.env.CHAIN_ENGINE}`).web3_ws;
 const path = require('path');
 const fs = require('fs');
+const db = require('./lib/sqlite_db');
+
+db.init();
 
 async function checkBalance() {
   // emit FeeSend(owner(), feeAmount)
@@ -21,40 +24,6 @@ async function checkBalance() {
   // update后 =》        prizePool + delegatePool + demandDepositPool  =   balance
 }
 
-function sleep(ms) {
-	return new Promise(function (resolve, reject) {
-		setTimeout(function () {
-			resolve();
-		}, ms);
-	})
-};
-
-function promise(func, paras=[], obj=null){
-  return new Promise(function(success, fail){
-      function _cb(err, result){
-          if(err){
-              fail(err);
-          } else {
-              success(result);
-          }
-      }
-      paras.push(_cb);
-      func.apply(obj, paras);
-  });
-}
-
-function promiseEvent(func, paras=[], obj=null, event){
-  return new Promise(function(success, fail){
-      let res = func.apply(obj, paras);
-      obj.on(event, function _cb(err){
-          if(err){
-              fail(err);
-          } else {
-              success(res);
-          }
-      })
-  });
-}
 
 const buyEvent = web3.utils.keccak256("Buy(address,uint256,uint256[],uint256[])");
 const redeemEvent = web3.utils.keccak256("Redeem(address,bool,uint256[],uint256)");
@@ -69,50 +38,77 @@ const delegateOutEvent = web3.utils.keccak256("DelegateOut(address,uint256)");
 const delegateInEvent = web3.utils.keccak256("DelegateIn(address,uint256)");
 const subsidyInEvent = web3.utils.keccak256("SubsidyIn(address,uint256)");
 
+// event Buy(
+//   address indexed user,
+//   uint256 stakeAmount,
+//   uint256[] codes,
+//   uint256[] amounts
+// );
 function buy(log) {
-  log.topics.length = 2;
+  // for (key in log) {
+  //   console.log(JSON.stringify(key));
+  //   console.log(JSON.stringify(log[key]));
+  // }
+  console.log(JSON.stringify(log.returnValues));
 }
 
+// event Redeem(address indexed user, bool indexed success, uint256[] codes, uint256 amount);
 function redeem(log) {
-
+  console.log(JSON.stringify(log.returnValues));
 }
 
+// event GasNotEnough();
 function gasNotEnough(log) {
 
 }
 
+// event PrizeWithdraw(address indexed user, bool indexed success, uint256 amount);
 function prizeWithdraw(log) {
 
 }
 
+// event UpdateSuccess();
 function updateSuccess(log) {
 
 }
 
+// event SubsidyRefund(address indexed refundAddress, uint256 amount);
 function subsidyRefund(log) {
 
 }
 
+// event RandomGenerate(uint256 indexed epochID, uint256 random);
 function randomGenerate(log) {
 
 }
 
+// event LotteryResult(
+//   uint256 indexed epochID,
+//   uint256 winnerCode,
+//   uint256 prizePool,
+//   address[] winners,
+//   uint256[] amounts
+// );
 function lotteryResult(log) {
 
 }
 
+// event FeeSend(address indexed owner, uint256 indexed amount);
 function feeSend(log) {
 
 }
 
+// event DelegateOut(address indexed validator, uint256 amount);
 function delegateOut(log) {
 
 }
 
+// event DelegateIn(address indexed validator, uint256 amount);
 function delegateIn(log) {
 
 }
 
+// event SubsidyIn(address indexed sender, uint256 amount);
 function subsidyIn(log) {
 
 }
@@ -158,7 +154,7 @@ handlers[subsidyInEvent] = subsidyIn;
 //     address: process.env.JACKPOT_ADDRESS, 
 //     // topics: [buyEvent, "0x0000000000000000000000004db93be4e7e1bd5065ef49bf893e79301d9ee476"]
 //   }
-
+// 
 //   const subscription = web3_ws.eth.subscribe('logs', options, (error, result) => {
 //     if (error) {
 //       console.log("error:" + error);
@@ -190,7 +186,7 @@ handlers[subsidyInEvent] = subsidyIn;
 //       console.log(JSON.stringify(result, null, 2));
 //       results.forEach(result => {
 //         result.returnValues.amounts.forEach(amount => {
-          
+// 
 //         })
 //       })
 //     }
@@ -201,27 +197,13 @@ handlers[subsidyInEvent] = subsidyIn;
 async function scanFailedTx(from, to) {
   const failedTxs = []
   const successTxs = []
-  // scan all blocks
-  const blocksPromise = [];
-  for (let j = from; j <= to; j++) {
-    // blocksPromise.push(new promise(web3.eth.getBlock, [j, true], web3.eth));
-    blocksPromise.push();
-  }
-  const blocks = await Promise.all(blocksPromise);
-
-  // scan all jackpot txs
-  const receiptsPromise = [];
-  blocks.forEach((block) => {
-    if (block.transactions) {
-      block.transactions.forEach(tx => {
-        if (process.env.JACKPOT_ADDRESS === tx.to.toLowerCase()) {
-          receiptsPromise.push(new promise(web3.eth.getTransactionReceipt, [tx.hash], web3.eth));
-        }
-      })
-    }
-  })
-  const receipts = await Promise.all(receiptsPromise);
-  receipts.sort()
+  
+  const receipts = await wanChain.getTxsBetween(from, to, process.env.JACKPOT_ADDRESS);
+  // write to receipt table in robot.db
+  // db.insert(receipts);
+  // read and check
+  // db.selectAll();
+  // 
   receipts.forEach((receipt) => {
     if (receipt) {
       if (receipt.status) {
@@ -230,7 +212,10 @@ async function scanFailedTx(from, to) {
         const logs = receipt.logs;
         logs.forEach(log => {
           if (log.topics.length > 0) {
-            handlers[log.topics[0]](log);
+            const event = jackPot.contract.events[log.topics[0]]();
+            const logObj = event._formatOutput(log);
+            handlers[log.raw.topics[0]](logObj);
+            // handlers[log.topics[0]](log);
           }
         })
       } else {
@@ -238,19 +223,29 @@ async function scanFailedTx(from, to) {
       }
     }
   })
-  if (failedTxs.length > 0) {
-    // send mail
-  }
 
-  console.log(`success = ${successTxs.length}, failed = ${failedTxs.length}`)
+  return { successTxs, failedTxs }
 }
 
+// (-9223372036854775808,9223372036854775807)
+function loadScannedInfo() {
+}
+
+// if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
 async function scanAndCheck() {
   const blockNumber = await web3.eth.getBlockNumber();
+  const from = parseInt(process.env.JACKPOT_BLOCKNUMBER);
+
+  
+  const { successTxs, failedTxs } = await scanFailedTx(blockNumber - 1000, blockNumber);
+  if (failedTxs.length > 0) {
+    // send mail
+    jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs));
+  }
 }
 
 setTimeout(async () => {
-  await scanFailedTx();
+  await scanAndCheck();
   // await eventFilter();
   // await getPastEvents();
 }, 0);

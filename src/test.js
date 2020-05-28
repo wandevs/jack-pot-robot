@@ -82,7 +82,7 @@ async function testLottery() {
 // select code and buy
 async function customerBuyAndRedeem() {
   for (let j = 0; j < keys.length; j++) {
-    if (util.bufferToInt(crypto.randomBytes(6)) % 20 == 5) {
+    if (util.bufferToInt(crypto.randomBytes(6)) % 40 == 5) {
       const userInfo = await jackPot.getUserCodeList(keys[j].address);
       console.log(`address = ${keys[j].address}`);
       console.log(JSON.stringify(userInfo));
@@ -154,10 +154,11 @@ async function testCore() {
   await jackPot.update();
   await jackPot.chooseValidator();
   await jackPot.runDelegateIn();
-  const amount = web3.utils.toBN(await jackPot.getPendingAmount());
-  if (amount > 0) {
-    await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
-  }
+  // const amount = web3.utils.toBN(await jackPot.getPendingAmount());
+  // if (amount > 0) {
+  //   await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
+  //   await tryDelegateOut();
+  // }
   await testLottery();
   await jackPot.open();
 

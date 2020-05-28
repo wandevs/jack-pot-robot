@@ -21,15 +21,6 @@ after(function () {
 describe("iWan == wanChain test", function () {
   this.timeout(16000);
 
-  it('sendRawTxByWeb3', async function() {
-    const nonce = await wanChain.getTxCount(address);
-    const rawTx = wanHelper.signTx(nonce, data, privateKey, value);
-    const txHash = await wanChain.sendRawTxByWeb3(rawTx);
-    console.log(`wanChain txHash = ${txHash}`);
-
-    const b = await iWan.sendRawTxByWeb3();
-  });
-
   it('getTxCount', async function() {
     const a = await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS);
     const b = await iWan.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS);

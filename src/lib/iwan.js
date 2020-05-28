@@ -80,6 +80,10 @@ class IWan {
   async getBlock(blockNumber, bTxDetails) {
     return await this.apiClient.getBlockByNumber(process.env.IWAN_CHAINTYPE, blockNumber);
   }
+
+  getTxsBetween(fromBlock, toBlock, address) {
+
+  }
   ///////////////////////////////////////////////////////////
   // those are used for test
   async getRandom(epochId, blockNumber) {

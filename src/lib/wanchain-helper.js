@@ -7,12 +7,12 @@ const secp256k1_N = new BN("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd2
 const log = require('./log');
 const util = require('ethereumjs-util');
 
-function signTx(nonce, data, prvKey, value='0x00', to = process.env.JACKPOT_ADDRESS) {
+function signTx(gasLimit, nonce, data, prvKey, value='0x00', to = process.env.JACKPOT_ADDRESS) {
   const txParams = {
     Txtype: 0x01,
     nonce: nonce,
     gasPrice: process.env.GASPRICE,
-    gasLimit: process.env.GASLIMIT,
+    gasLimit: gasLimit,
     to: to,
     value: value,
     data: data,

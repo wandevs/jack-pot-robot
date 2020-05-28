@@ -12,7 +12,7 @@ const BigNumber = require("bignumber.js");
 async function signSend(nonce, i) {
   if (i > 0) {
     const value = "0x" + new BigNumber(web3.utils.toWei(process.env.WAN_TO_SEND).toString()).toString(16);
-    const singedData = signTx(nonce, '0x', moneyPrvKeyBuffer, value, keys[keys.length - i].address)
+    const singedData = signTx(40000, nonce, '0x', moneyPrvKeyBuffer, value, keys[keys.length - i].address)
     const txHash = await wanChain.sendRawTxByWeb3(singedData);
     console.log(`hash:${txHash}, nonce:${nonce}`);
     signSend(nonce + 1, i - 1);

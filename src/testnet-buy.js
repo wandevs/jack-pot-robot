@@ -41,3 +41,7 @@ async function customerClean() {
     }
   }
 }
+
+setTimeout(async () => {
+  await customerBuyAndRedeem();
+}, 0);

@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "better-sqlite3": "^7.0.1",
     "bignumber.js": "^9.0.0",
     "bn.js": "^5.1.1",
     "crypto": "^1.0.1",
