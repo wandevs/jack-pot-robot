@@ -19,7 +19,7 @@ class DB {
     let db = null;
     if (!fs.existsSync(filePath)) {
       db = new Sqlite3(filePath, {verbose: console.log});
-      db.exec(`
+      const createSql = db.prepare(`
         create table receipt (
           transactionHash CHAR(66) PRIMARY KEY NOT NULL,
           blockNumber INT,
@@ -42,6 +42,7 @@ class DB {
           blockNumber INT
         )
       `)
+      createSql.run()
       // create unique index block_number_tx_index on receipt (blockNumber, transactionIndex)
     } else {
       db = new Sqlite3(filePath, {verbose: console.log});

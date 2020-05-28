@@ -194,13 +194,13 @@ handlers[subsidyInEvent] = subsidyIn;
 // }
 
 // scan between [from, to]
-async function scanFailedTx(from, to) {
+async function scanTx(from, to) {
   const failedTxs = []
   const successTxs = []
-  
+
   const receipts = await wanChain.getTxsBetween(from, to, process.env.JACKPOT_ADDRESS);
   // write to receipt table in robot.db
-  // db.insert(receipts);
+  db.insert(receipts);
   // read and check
   // db.selectAll();
   // 
@@ -231,17 +231,31 @@ async function scanFailedTx(from, to) {
 function loadScannedInfo() {
 }
 
-// if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
-async function scanAndCheck() {
-  const blockNumber = await web3.eth.getBlockNumber();
-  const from = parseInt(process.env.JACKPOT_BLOCKNUMBER);
+async function doScan(from, step, to) {
+  let next = from + step;
+  if (next > to) {
+    next = to;
+  } 
 
-  
-  const { successTxs, failedTxs } = await scanFailedTx(blockNumber - 1000, blockNumber);
+  const { successTxs, failedTxs } = await scanTx(from, next);
+
   if (failedTxs.length > 0) {
-    // send mail
     jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs));
   }
+
+  if (next < to) {
+    setTimeout( async () => {
+      await doScan(next + 1, step, to); 
+    }, 0);
+  }
+}
+// if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
+async function scanAndCheck() {
+  const from = parseInt(process.env.SCAN_FROM);
+  const step = parseInt(process.env.SCAN_STEP)
+  const to = await web3.eth.getBlockNumber();
+
+  await doScan(from, step, to);
 }
 
 setTimeout(async () => {

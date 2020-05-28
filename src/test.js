@@ -52,11 +52,11 @@ async function testLottery() {
   let now = new Date().getTime() / 1000;
   const waitTime = now > randomGenerateTime ? 0 : randomGenerateTime - now;
 
-  if (waitTime > 50) {
-    setTimeout(async () => {
-      await customerBuyAndRedeem();
-    }, 20000);
-  }
+  // if (waitTime > 50) {
+  //   setTimeout(async () => {
+  //     await customerBuyAndRedeem();
+  //   }, 20000);
+  // }
 
   await sleep(waitTime * 1000);
 
@@ -148,13 +148,17 @@ async function customerClean() {
   }
 }
 
+const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
+const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
+const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
 async function testCore() {
-  await jackPot.chooseValidator();
   await jackPot.open();
-  await customerBuyAndRedeem();
+  // await customerBuyAndRedeem();
   await jackPot.update();
-  await jackPot.chooseValidator();
-  await jackPot.runDelegateIn();
+  const {isSetValidator, isDelegateOut} = await jackPot.chooseValidator();
+  if (isSetValidator) {
+    await jackPot.runDelegateIn();
+  }
   // const amount = web3.utils.toBN(await jackPot.getPendingAmount());
   // if (amount > 0) {
   //   await jackPot.subsidyIn(amount.add(web3.utils.toWei(web3.utils.toBN(1000))));
@@ -172,9 +176,6 @@ setTimeout( async () => {
   await testCore();
 }, 0);
 
-// const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
-// const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
-// const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
 // setTimeout( async () => {
 //   // console.log(`balance = ${await wanChain.getBalance(process.env.JACKPOT_OPERATOR_ADDRESS)}`);
 //   // console.log(`nonce = ${await wanChain.getTxCount(process.env.JACKPOT_OPERATOR_ADDRESS)}`);

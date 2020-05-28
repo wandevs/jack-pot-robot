@@ -42,12 +42,12 @@ const robotSchedules = ()=>{
   // runDelegateIn: After the settlement is completed, the settlement robot will call this function to conduct POS delegation to the funds in the capital pool that meet the proportion of the commission.
   schedule.scheduleJob('0 */10 * * * *', async () => {
     // check delegate total amount, when > 20000 wan, change validator, if use validators > 5, delegateOut one
-    const success = await doSchedule('chooseValidator');
+    const {isSetValidator, isDelegateOut} = await doSchedule('chooseValidator');
 
-    if (success) {
+    if (isSetValidator) {
       log.info('runDelegateIn current lottery');
       await doSchedule('runDelegateIn');
-    } else {
+    } else if (!isDelegateOut) {
       await jackPot.logAndSendMail("chooseValidator failed", "please add more validator");
     }
   });

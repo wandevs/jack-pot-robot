@@ -23,7 +23,6 @@ class JackPot {
         this.contract = new web3.eth.Contract(abiJackPot, process.env.JACKPOT_ADDRESS);
         this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
         this.zeroAmount = web3.utils.toBN(0);
-        this.createAtBlockNumber = JSON.parse(process.env.JACKPOT_BLOCKNUMBER);
     }
 
   async logAndSendMail(subject, content, isSend = true) {
@@ -63,8 +62,8 @@ class JackPot {
 
     async update() {
         const data = this.contract.methods.update().encodeABI();
-        const gasLimit = await this.contract.methods.update().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        const result = await this.doOperator(this.update.name, data, gasLimit);
+        // const gasLimit = await this.contract.methods.update().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
+        const result = await this.doOperator(this.update.name, data, process.env.GASLIMIT);
 
         if (result.status) {
             const logs = result.logs;
@@ -173,57 +172,6 @@ class JackPot {
         }
     }
 
-    async chooseValidator_bk() {
-        const validatorsInfo = await this.getValidatorsInfo();
-
-        const blockNumber = await wanChain.getBlockNumber();
-        const stakersInfoOrigin = await wanChain.getStakerInfo(blockNumber);
-        // delete redeem validator and stake out validator
-        const stakersInfo = stakersInfoOrigin.filter((stakerInfo)=>{return (stakerInfo.nextLockEpochs !== 0) && (stakerInfo.address !== validatorsInfo.withdrawFromValidator)});
-
-        const isDelegateOut = validatorsInfo.withdrawFromValidator !== "0x0000000000000000000000000000000000000000";
-
-        let candidates = this.myValidators;
-        let validCandidates = [];
-
-        // check the candidate
-        for (let i=0; i<candidates.length; i++) {
-            const addr = candidates[i];
-            const info = stakersInfo.find(s => s.address === addr);
-            if (info) {
-                const client = info.clients.find(e => e.address === process.env.JACKPOT_ADDRESS.toLowerCase());
-                let amount = web3.utils.toBN(0);
-                if (client) {
-                    amount = web3.utils.toBN(client.amount);
-                }
-                validCandidates.push({addr, amount});
-                if (amount.cmp(this.perMaxAmount) === -1) {
-                    await this.setValidator(addr, validatorsInfo.currentValidator);
-                    return true;
-                }
-            }
-        }
-
-        // all failed ? choose the biggest delegate out, choose the smallest to be the candidate, if none, return false
-        if (validCandidates.length > 1) {
-            validCandidates.sort((a, b) => { return a.amount.cmp(b.amount);});
-        }
-
-        if (!isDelegateOut) {
-            if (validCandidates.length > 1) {
-                const outer = validCandidates.pop();
-                await this.runDelegateOut(outer.addr);
-            }
-        }
-
-        if (validCandidates.length > 0) {
-            await this.setValidator(validCandidates[0].addr, validatorsInfo.currentValidator);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     async getValidCandidates() {
         const validatorsInfo = await this.getValidatorsInfo();
         const blockNumber = await wanChain.getBlockNumber();
@@ -254,10 +202,6 @@ class JackPot {
             }
         }
 
-        // available amount
-        // if (validCandidates.length > 1) {
-        //     validCandidates.sort((a, b) => { return a.availableAmount.cmp(b.availableAmount);});
-        // }
         return { validCandidates, withdrawValidator: validatorsInfo.withdrawFromValidator, currentValidator: validatorsInfo.currentValidator };
     }
 
@@ -295,10 +239,11 @@ class JackPot {
 
                 if (outAddress && min.cmp(this.zeroAmount) > 0) {
                     await this.runDelegateOut(outAddress);
-                    const index = validCandidates.findIndex(v => { return v.addr === outAddress;});
-                    validCandidates.splice(index, 1);
                 }
+                return {isSetValidator: false, isDelegateOut: true};
             }
+        } else {
+            return {isSetValidator: false, isDelegateOut: true};
         }
 
         if (validCandidates.length > 0) {
@@ -312,10 +257,10 @@ class JackPot {
                 next = validCandidates.pop();
             }
             await this.setValidator(next.addr, currentValidator);
-            return true;
+            return {isSetValidator: true, isDelegateOut: false};
         }
 
-        return false;
+        return {isSetValidator: false, isDelegateOut: false};
     }
 
     ////////////////////////////////////////////
