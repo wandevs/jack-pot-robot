@@ -6,7 +6,7 @@ function sleep(ms) {
 	})
 };
 
-function promise(func, paras=[], obj=null){
+function promisify(func, paras=[], obj=null){
   return new Promise(function(success, fail){
       function _cb(err, result){
           if(err){
@@ -37,6 +37,6 @@ function promiseEvent(func, paras=[], obj=null, event){
 
 module.exports = {
   sleep,
-  promise,
+  promisify,
   promiseEvent
 }

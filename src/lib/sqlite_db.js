@@ -3,6 +3,7 @@ const Sqlite3 = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { promisify, sleep } = require("./utils");
 
 console.log(os.platform());
 console.log(os.homedir());
@@ -19,31 +20,32 @@ class DB {
     let db = null;
     if (!fs.existsSync(filePath)) {
       db = new Sqlite3(filePath, {verbose: console.log});
-      const createSql = db.prepare(`
+      db.exec(`
         create table receipt (
-          transactionHash CHAR(66) PRIMARY KEY NOT NULL,
-          blockNumber INT,
-          "from" CHAR(42),
-          status BOOLEAN,
-          "to" CHAR(42),
-          transactionIndex INT
-        )
+          transactionHash char(66) NOT NULL PRIMARY KEY,
+          blockNumber integer not null unique,
+          "from" char(42),
+          status boolean,
+          "to" char(42),
+          transactionIndex integer
+        );
 
         create table block (
-          blockHash CHAR(66) PRIMARY KEY NOT NULL,
-          blockNumber UNIQUE INT 
-        )
+          blockHash char(66) PRIMARY KEY NOT NULL,
+          blockNumber integer UNIQUE 
+        );
 
-        create table account {
-          balance ST
-        }
+        create table account (
+          balance char(82),
+          address char(66)
+        );
 
         create table scanInfo (
-          blockNumber INT
-        )
-      `)
-      createSql.run()
-      // create unique index block_number_tx_index on receipt (blockNumber, transactionIndex)
+          blockNumber integer
+        );
+
+        create unique index block_number_tx_index on receipt (blockNumber, transactionIndex);
+      `);
     } else {
       db = new Sqlite3(filePath, {verbose: console.log});
     }

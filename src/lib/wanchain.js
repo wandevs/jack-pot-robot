@@ -3,7 +3,7 @@
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 const Web3 = require("web3");
 const abiJackPot = require('../../abi/jacks-pot');
-const { promise, sleep } = require("./utils");
+const { promisify, sleep } = require("./utils");
 
 /////////////////////////////////////////////////////////
 // Web3
@@ -74,8 +74,8 @@ class WanChain {
     // scan all blocks
     const blocksPromise = [];
     for (let j = from; j <= to; j++) {
-      // blocksPromise.push(new promise(web3.eth.getBlock, [j, true], web3.eth));
-      blocksPromise.push(new promise(this.web3.eth.getBlock, [j, true], this.web3.eth));
+      // blocksPromise.push(new promisify(web3.eth.getBlock, [j, true], web3.eth));
+      blocksPromise.push(new promisify(this.web3.eth.getBlock, [j, true], this.web3.eth));
     }
     const blocks = await Promise.all(blocksPromise);
 
@@ -85,7 +85,7 @@ class WanChain {
       if (block.transactions) {
         block.transactions.forEach(tx => {
           if (address === tx.to.toLowerCase()) {
-            receiptsPromise.push(new promise(this.web3.eth.getTransactionReceipt, [tx.hash], this.web3.eth));
+            receiptsPromise.push(new promisify(this.web3.eth.getTransactionReceipt, [tx.hash], this.web3.eth));
           }
         })
       }
