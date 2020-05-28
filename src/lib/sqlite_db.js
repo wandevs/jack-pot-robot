@@ -35,7 +35,7 @@ class DB {
         )
 
         create table account {
-          balance 
+          balance ST
         }
 
         create table scanInfo (

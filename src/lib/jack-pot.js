@@ -40,7 +40,8 @@ class JackPot {
     async doOperator(opName, data, gasLimit, value, count = 7, privateKey = process.env.JACKPOT_OPERATOR_PVKEY, address = process.env.JACKPOT_OPERATOR_ADDRESS) {
         log.debug(`do operator: ${opName}`);
         const nonce = await wanChain.getTxCount(address);
-        const rawTx = wanHelper.signTx(gasLimit, nonce, data, privateKey, value);
+        const gas = gasLimit ? gasLimit : await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, value, data);
+        const rawTx = wanHelper.signTx(gas, nonce, data, privateKey, value);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`${opName} hash: ${txHash}`);
         let receipt = null;
@@ -62,7 +63,6 @@ class JackPot {
 
     async update() {
         const data = this.contract.methods.update().encodeABI();
-        // const gasLimit = await this.contract.methods.update().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
         const result = await this.doOperator(this.update.name, data, process.env.GASLIMIT);
 
         if (result.status) {
@@ -79,26 +79,22 @@ class JackPot {
 
     async open() {
         const data = this.contract.methods.open().encodeABI();
-        const gasLimit = await this.contract.methods.open().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        return await this.doOperator(this.open.name, data, gasLimit);
+        return await this.doOperator(this.open.name, data);
     }
 
     async close() {
         const data = this.contract.methods.close().encodeABI();
-        const gasLimit = await this.contract.methods.close().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        return await this.doOperator(this.close.name, data, gasLimit);
+        return await this.doOperator(this.close.name, data);
     }
 
     async runDelegateIn() {
         const data = this.contract.methods.runDelegateIn().encodeABI();
-        const gasLimit = await this.contract.methods.runDelegateIn().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        return await this.doOperator(this.runDelegateIn.name, data, gasLimit);
+        return await this.doOperator(this.runDelegateIn.name, data);
     }
 
     async lotterySettlement() {
         const data = this.contract.methods.lotterySettlement().encodeABI();
-        const gasLimit = await this.contract.methods.lotterySettlement().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        return await this.doOperator(this.lotterySettlement.name, data, gasLimit);
+        return await this.doOperator(this.lotterySettlement.name, data);
     }
 
     async setValidator(validator, current = null) {
@@ -109,8 +105,7 @@ class JackPot {
         }
         const data = this.contract.methods.setValidator(validator).encodeABI();
         log.info(`changing validator from ${current} to ${validator}`);
-        const gasLimit = await this.contract.methods.setValidator(validator).estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        return await this.doOperator(this.setValidator.name, data, gasLimit);
+        return await this.doOperator(this.setValidator.name, data);
     }
 
     /////////////////////////
@@ -127,8 +122,7 @@ class JackPot {
 
     async runDelegateOut(validatorAddr) {
         const data = this.contract.methods.runDelegateOut(validatorAddr).encodeABI();
-        const gasLimit = await this.contract.methods.runDelegateOut(validatorAddr).estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        return await this.doOperator(this.runDelegateOut.name, data, gasLimit);
+        return await this.doOperator(this.runDelegateOut.name, data);
     }
 
     async getValidatorsInfo() {
@@ -272,8 +266,8 @@ class JackPot {
         const data = this.contract.methods.buy(codes, amounts).encodeABI();
         const value = '0x' + total.toString('hex');
         const nonce = await wanChain.getTxCount(address);
-        const gasLimit = await this.contract.methods.buy(codes, amounts).estimateGas({gas:process.env.GASLIMIT, from: address, value:value});
-
+        // const gasLimit = await this.contract.methods.buy(codes, amounts).estimateGas({gas:process.env.GASLIMIT, from: address, value:value});
+        const gasLimit = await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, value, data);
         const rawTx = wanHelper.signTx(gasLimit, nonce, data, privateKey, value, process.env.JACKPOT_ADDRESS);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`buy hash: ${txHash}, count: ${codes.length}`);
@@ -283,8 +277,8 @@ class JackPot {
         codes.forEach((a,index,theArray) => {theArray[index] = a } );
         const data = this.contract.methods.redeem(codes).encodeABI();
         const nonce = await wanChain.getTxCount(address);
-        const gasLimit = await this.contract.methods.redeem(codes).estimateGas({gas:process.env.GASLIMIT, from: address, value:'0x00'});
-
+        // const gasLimit = await this.contract.methods.redeem(codes).estimateGas({gas:process.env.GASLIMIT, from: address, value:'0x00'});
+        const gasLimit = await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, '0x00', data);
         const rawTx = wanHelper.signTx(gasLimit, nonce, data, privateKey, '0x00', process.env.JACKPOT_ADDRESS);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`redeem hash: ${txHash}, codes: ${JSON.stringify(codes)}`);
@@ -292,14 +286,11 @@ class JackPot {
 
     async subsidyIn(amount) {
         const data = this.contract.methods.subsidyIn().encodeABI();
-        const gasLimit = await this.contract.methods.subsidyIn().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x' + amount.toString('hex')});
-        return await this.doOperator(this.subsidyIn.name, data, gasLimit, '0x' + amount.toString('hex'));
+        return await this.doOperator(this.subsidyIn.name, data, null, '0x' + amount.toString('hex'));
     }
-    async subsidyOut(amount) {
+    async subsidyOut() {
         const data = this.contract.methods.subsidyOut().encodeABI();
-        const gasLimit = await this.contract.methods.subsidyOut().estimateGas({gas:process.env.GASLIMIT, from: process.env.JACKPOT_OPERATOR_ADDRESS, value:'0x00'});
-        // const total = web3.utils.toWei(web3.utils.toBN(amount));
-        return await this.doOperator(this.subsidyOut.name, data, gasLimit, '0x00');
+        return await this.doOperator(this.subsidyOut.name, data, null, '0x00');
     }
 
     async getPendingAmount() {

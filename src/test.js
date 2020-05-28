@@ -148,9 +148,7 @@ async function customerClean() {
   }
 }
 
-const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
-const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
-const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
+// const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");ss
 async function testCore() {
   await jackPot.open();
   // await customerBuyAndRedeem();

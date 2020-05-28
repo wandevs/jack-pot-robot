@@ -62,6 +62,10 @@ class WanChain {
     return await this.web3.pos.getStakerInfo(blockNumber);
   };
 
+  async estimateGas(from, to, value, data) {
+    return await this.web3.eth.estimateGas({from, to, value, data});
+  }
+
   closeEngine() {
   }
 
