@@ -149,6 +149,7 @@ async function customerClean() {
 }
 
 async function testCore() {
+  await jackPot.chooseValidator();
   await jackPot.open();
   await customerBuyAndRedeem();
   await jackPot.update();

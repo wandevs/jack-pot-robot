@@ -293,15 +293,17 @@ class JackPot {
                     min = max;
                 }
 
-                if (!outAddress && min.cmp(this.zeroAmount) > 0) {
+                if (outAddress && min.cmp(this.zeroAmount) > 0) {
                     await this.runDelegateOut(outAddress);
-                    validCandidates.filter(v => { return v.addr !== outAddress; })
+                    const index = validCandidates.findIndex(v => { return v.addr === outAddress;});
+                    validCandidates.splice(index, 1);
                 }
             }
         }
 
         if (validCandidates.length > 0) {
             let next = validCandidates.find((v) => {
+                log.debug(`amount = ${v.amount.toString(10)}, pool = ${v.poolAmount.toString(10)}`)
                 if (v.amount.cmp(v.poolAmount) < 0) {
                     return true;
                 }
