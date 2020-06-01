@@ -44,20 +44,105 @@ describe("sqlite3 test", function () {
       to: "0x3d0e7c0813a51d3bd1d08246af2a8a7a57d8922e",
       transactionHash: "0x066281ca869c2c37a1c8874d822629495d4cfc362006bd945f292980e6be4b7a",
       transactionIndex: 0
+    },
+    {
+      blockHash: "0x8f50ab97e5e27f646f5ee615afafffa9cf82f7edc1e4cba7fe04f442a93f1ea2",
+      blockNumber: 7607178,
+      contractAddress: null,
+      cumulativeGasUsed: 38376,
+      from: "0x9da26fc2e1d6ad9fdd46138906b0104ae68a65d8",
+      gasUsed: 38376,
+      logs: [],
+      logsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      status: "0x0",
+      to: "0xd8b67e4c66a4ab51fa8b7a30a82c63ff792b79c0",
+      transactionHash: "0x9d2dca7ced99049b22d3f38d5c7abe5ee0f9f83ab952281d4b3cb99771909fdd",
+      transactionIndex: 0
+    },
+    {
+      blockHash: "0x6bbf131e64e74b727f0b881ac71dc60c8c6f90940376afe973b3a4d3a7429914",
+      blockNumber: 7607183,
+      contractAddress: null,
+      cumulativeGasUsed: 38421,
+      from: "0x9da26fc2e1d6ad9fdd46138906b0104ae68a65d8",
+      gasUsed: 38421,
+      logs: [{
+          address: "0xd8b67e4c66a4ab51fa8b7a30a82c63ff792b79c0",
+          blockHash: "0x6bbf131e64e74b727f0b881ac71dc60c8c6f90940376afe973b3a4d3a7429914",
+          blockNumber: 7607183,
+          data: "0x",
+          logIndex: 0,
+          removed: false,
+          topics: ["0xe0828ebc681453a239bd3a107defe316328dc7d2aec54a5d772da80fc136ce16"],
+          transactionHash: "0xf2af7250298c34b95f5b737dec1dded3c26c2bc2c36bc951b9ed9f01b932395a",
+          transactionIndex: 0
+      }],
+      logsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002040000000000040000000000000000000000",
+      status: false,
+      to: "0xd8b67e4c66a4ab51fa8b7a30a82c63ff792b79c0",
+      transactionHash: "0xf2af7250298c34b95f5b737dec1dded3c26c2bc2c36bc951b9ed9f01b932395a",
+      transactionIndex: 0
+    },
+    {
+      "blockHash": "0x608036c7ac1fa433f8fb2260dbcc13404b16bdc1acf4eace9c36f9fee1966080",
+      "blockNumber": 7607124,
+      "contractAddress": null,
+      "cumulativeGasUsed": 38421,
+      "from": "0x9da26fc2e1d6ad9fdd46138906b0104ae68a65d8",
+      "gasUsed": 38421,
+      "logs": [{
+        "address": "0xd8b67E4c66a4Ab51FA8B7a30A82c63FF792b79C0",
+        "topics": ["0xe0828ebc681453a239bd3a107defe316328dc7d2aec54a5d772da80fc136ce16"],
+        "data": "0x",
+        "blockNumber": 7607124,
+        "transactionHash": "0xa3ae54b26ada0b6392e1e1a35fa723327967ca506af8f70a4e9fad21e15ec47c",
+        "transactionIndex": 0,
+        "blockHash": "0x608036c7ac1fa433f8fb2260dbcc13404b16bdc1acf4eace9c36f9fee1966080",
+        "logIndex": 0,
+        "removed": false,
+        "id": "log_893bf8ba"
+      }],
+      "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002040000000000040000000000000000000000",
+      "status": true,
+      "to": "0xd8b67e4c66a4ab51fa8b7a30a82c63ff792b79c0",
+      "transactionHash": "0xa3ae54b26ada0b6392e1e1a35fa723327967ca506af8f70a4e9fad21e15ec47c",
+      "transactionIndex": 0
     }
-  ]
+  ];
 
-  it('insert receipt', function() {
-    db.insertReceipt(receipts);
+  it('insert receipts', function() {
+    receipts.forEach((receipt) => { db.insertReceipt(receipt); })
   })
 
   it('select all', function() {
     db.selectAll();
   })
 
-  it.only('getScanBlockNumber', async function() {
-    const scanInfo = db.saveScanBlockNumber(295315);
-    console.log(`scan info ${scanInfo}`);
-  });
+  it.only('insert', function() {
+    db.insertScan({blockNumber: 333});
+    const a = db.getScan();
+    assert.equal(a.blockNumber, 333)
+  })
+
+  it('update', function() {
+    db.updateScan({blockNumber: 111});
+    const b = db.getScan();
+    assert.equal(b.blockNumber, 111);
+  })
+
+  it.only('tx batch update', function() {
+    const tx = db.wrapTransaction(function() {
+      db.updateScan({blockNumber: 111});
+      let s1 = db.getScan();
+      assert.equal(s1.blockNumber, 111);
+      db.updateScan({blockNumber: 222});
+      let s2 = db.getScan();
+      assert.equal(s2.blockNumber, 222);
+      db.updateScan({blockNumber: 333});
+      let s3 = db.getScan();
+      assert.equal(s3.blockNumber, 333);
+    });
+    tx();
+  })
 });
 

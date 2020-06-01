@@ -1,6 +1,7 @@
 const iWanClient = require('iwan-sdk');
 const Web3 = require('web3');
 const BigNumber = require("bignumber.js");
+const { promisify, sleep } = require("./utils");
 // require("dotenv").config({path: `${__dirname}/../../.env.local`});
 
 //Subject to https://iwan.wanchain.org
@@ -85,8 +86,27 @@ class IWan {
     return await this.apiClient.estimateGas(process.env.IWAN_CHAINTYPE, {from, to, value, data})
   }
 
-  getTxsBetween(fromBlock, toBlock, address) {
-
+  async getTxsBetween(address, fromBlock, toBlock) {
+    const txs = await this.apiClient.getTransByAddressBetweenBlocks(process.env.IWAN_CHAINTYPE, address, fromBlock, toBlock);
+    const receiptsPromise = [];
+    txs.forEach(tx => {
+      if (address === tx.to.toLowerCase()) {
+        receiptsPromise.push(new promisify(this.apiClient.getTransactionReceipt, [process.env.IWAN_CHAINTYPE, tx.hash], this.apiClient));
+      }
+    })
+    const receipts = await Promise.all(receiptsPromise);
+    if (receipts.length > 1) {
+      receipts.sort((a, b) => {
+        if (a.blockNumber < b.blockNumber) {
+          return -1;
+        } else if (a.blockNumber > b.blockNumber) {
+          return 1;
+        } else if (a.blockNumber === b.blockNumber) {
+          a.transactionIndex > b.transactionIndex ? 1 : -1;
+        }
+      })
+    }
+    return receipts;
   }
   ///////////////////////////////////////////////////////////
   // those are used for test

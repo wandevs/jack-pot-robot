@@ -133,6 +133,15 @@ describe("iWan == wanChain test", function () {
     assert.deepStrictEqual(a, b, " info should same");
   });
 
+  it('getTxsBetween', async function() {
+    const from = 7607124;
+    const to = 7607124;
+    const txs1 = await wanChain.getTxsBetween(process.env.JACKPOT_ADDRESS, from, to);
+    const txs = await iWan.getTxsBetween(process.env.JACKPOT_ADDRESS, from, to);
+    console.log(JSON.stringify(txs1));
+    console.log(JSON.stringify(txs));
+  });
+
   it('getRandom', async function() {
     const epochId = 18397;
     const blockNumber = 7384591;

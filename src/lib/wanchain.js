@@ -70,7 +70,7 @@ class WanChain {
   }
 
   // get txs on address between [fromBlock, toBlock]
-  async getTxsBetween(from, to, address) {
+  async getTxsBetween(address, from, to) {
     // scan all blocks
     const blocksPromise = [];
     for (let j = from; j <= to; j++) {
@@ -91,7 +91,17 @@ class WanChain {
       }
     })
     const receipts = await Promise.all(receiptsPromise);
-    receipts.sort((a, b) => { return a.blockNumber > b.blockNumber ? 1 : -1})
+    if (receipts.length > 1) {
+      receipts.sort((a, b) => {
+        if (a.blockNumber < b.blockNumber) {
+          return -1;
+        } else if (a.blockNumber > b.blockNumber) {
+          return 1;
+        } else if (a.blockNumber === b.blockNumber) {
+          a.transactionIndex > b.transactionIndex ? 1 : -1;
+        }
+      })
+    }
     return receipts;
   }
 

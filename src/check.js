@@ -38,23 +38,49 @@ const delegateOutEvent = web3.utils.keccak256("DelegateOut(address,uint256)");
 const delegateInEvent = web3.utils.keccak256("DelegateIn(address,uint256)");
 const subsidyInEvent = web3.utils.keccak256("SubsidyIn(address,uint256)");
 
-// event Buy(
-//   address indexed user,
-//   uint256 stakeAmount,
-//   uint256[] codes,
-//   uint256[] amounts
-// );
+// update
+function updateUserBalance(bAdd, amount, user) {
+  if (user) {
+    if (bAdd) {
+      user.balance = web3.utils.toBN(user.balance).add(web3.utils.toBN(amount)).toString(10)
+    } else {
+      if (user.balance.cmp(web3.utils.toBN(amount)) > 0) {
+        user.balance = web3.utils.toBN(user.balance).sub(web3.utils.toBN(amount)).toString(10)
+      } else {
+        throw `user: ${JSON.stringify(user)} balance not enough`;
+      }
+    }
+    db.updateUser(user);
+  } else {
+    if (bAdd) {
+      db.insertUser({address: obj.address, balance: obj.stakeAmount});
+    } else {
+      throw `user: ${JSON.stringify(user)} balance not enough`;
+    }
+  }
+}
+
+function updateContractBalance(bAdd, amount) {
+  const contractUser = db.getUser(process.env.JACKPOT_ADDRESS);
+  updateUserBalance(bAdd, obj.stakeAmount, contractUser);
+}
+
+// event Buy( address indexed user, uint256 stakeAmount, uint256[] codes, uint256[] amounts );
 function buy(log) {
-  // for (key in log) {
-  //   console.log(JSON.stringify(key));
-  //   console.log(JSON.stringify(log[key]));
-  // }
   console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.user);
+  updateUserBalance(true, obj.stakeAmount, user);
+  updateContractBalance(true, obj.stakeAmount);
 }
 
 // event Redeem(address indexed user, bool indexed success, uint256[] codes, uint256 amount);
 function redeem(log) {
   console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.user);
+  updateUserBalance(false, obj.amount, user);
+  updateContractBalance(false, obj.amount);
 }
 
 // event GasNotEnough();
@@ -64,7 +90,11 @@ function gasNotEnough(log) {
 
 // event PrizeWithdraw(address indexed user, bool indexed success, uint256 amount);
 function prizeWithdraw(log) {
-
+  console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.user);
+  updateUserBalance(false, obj.amount, user);
+  updateContractBalance(false, obj.amount);
 }
 
 // event UpdateSuccess();
@@ -74,7 +104,11 @@ function updateSuccess(log) {
 
 // event SubsidyRefund(address indexed refundAddress, uint256 amount);
 function subsidyRefund(log) {
-
+  console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.refundAddress);
+  updateUserBalance(false, obj.amount, user);
+  updateContractBalance(false, obj.amount);
 }
 
 // event RandomGenerate(uint256 indexed epochID, uint256 random);
@@ -82,35 +116,45 @@ function randomGenerate(log) {
 
 }
 
-// event LotteryResult(
-//   uint256 indexed epochID,
-//   uint256 winnerCode,
-//   uint256 prizePool,
-//   address[] winners,
-//   uint256[] amounts
-// );
+// event LotteryResult(uint256 indexed epochID, uint256 winnerCode, uint256 prizePool, address[] winners, uint256[] amounts);
 function lotteryResult(log) {
-
 }
 
 // event FeeSend(address indexed owner, uint256 indexed amount);
 function feeSend(log) {
+  console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.owner);
+  updateUserBalance(true, obj.amount, user);
+  updateContractBalance(false, obj.amount);
 
 }
 
 // event DelegateOut(address indexed validator, uint256 amount);
 function delegateOut(log) {
-
+  console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.validator);
+  updateUserBalance(false, obj.amount, user);
+  updateContractBalance(true, obj.amount);
 }
 
 // event DelegateIn(address indexed validator, uint256 amount);
 function delegateIn(log) {
-
+  console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.validator);
+  updateUserBalance(true, obj.amount, user);
+  updateContractBalance(false, obj.amount);
 }
 
 // event SubsidyIn(address indexed sender, uint256 amount);
 function subsidyIn(log) {
-
+  console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  const user = db.getUser(obj.sender);
+  updateUserBalance(true, obj.amount, user);
+  updateContractBalance(true, obj.amount);
 }
 
 const handlers = {};
@@ -195,71 +239,105 @@ handlers[subsidyInEvent] = subsidyIn;
 
 // scan between [from, to]
 async function scanTx(from, to) {
-  const failedTxs = []
-  const successTxs = []
+  const receipts = await wanChain.getTxsBetween(process.env.JACKPOT_ADDRESS, from, to);
+  return receipts;
+}
 
-  const receipts = await wanChain.getTxsBetween(from, to, process.env.JACKPOT_ADDRESS);
-  // write to receipt table in robot.db
-  db.insert(receipts);
-  // read and check
-  // db.selectAll();
-  // 
+function parseReceipt(receipts, next) {
+  const failedTxs = [];
+  const successTxs = [];
   receipts.forEach((receipt) => {
-    if (receipt) {
-      if (receipt.status) {
-        successTxs.push(receipt);
-        // parse log
-        const logs = receipt.logs;
-        logs.forEach(log => {
-          if (log.topics.length > 0) {
-            const event = jackPot.contract.events[log.topics[0]]();
-            const logObj = event._formatOutput(log);
-            handlers[log.raw.topics[0]](logObj);
-            // handlers[log.topics[0]](log);
-          }
-        })
-      } else {
-        failedTxs.push(receipt);
-      }
+    db.insertReceipt(receipt);
+    if (receipt.status) {
+      successTxs.push(receipt);
+
+      const logs = receipt.logs;
+      logs.forEach(log => {
+        if (log.topics.length > 0) {
+          const event = jackPot.contract.events[log.topics[0]]();
+          const logObj = event._formatOutput(log);
+          handlers[log.raw.topics[0]](logObj);
+        }
+      })
+    } else {
+      failedTxs.push(receipt);
     }
   })
 
-  return { successTxs, failedTxs }
+  db.insertScan({blockNumber: parseInt(next)});
+
+  return failedTxs;
 }
 
-// (-9223372036854775808,9223372036854775807)
-function loadScannedInfo() {
-}
-
+let bScanning = false;
 async function doScan(from, step, to) {
   let next = from + step;
   if (next > to) {
     next = to;
-  } 
+  }
 
-  const { successTxs, failedTxs } = await scanTx(from, next);
+  const receipts = await scanTx(from, next);
+  const transaction = db.wrapTransaction(parseReceipt);
+  const failedTxs = transaction(receipts, next);
 
   if (failedTxs.length > 0) {
-    jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs));
+    jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs, null, 2));
   }
 
   if (next < to) {
     setTimeout( async () => {
       await doScan(next + 1, step, to); 
     }, 0);
+  } else {
+    bScanning = false;
   }
 }
-// if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
-async function scanAndCheck() {
-  const from = parseInt(process.env.SCAN_FROM);
-  const step = parseInt(process.env.SCAN_STEP)
-  const to = await web3.eth.getBlockNumber();
 
-  await doScan(from, step, to);
+async function getBalanceAndBlockNumber() {
+  let blockNumber = await wanChain.getBlockNumber();
+  let balance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
+  while (true) {
+    const blockNumberNew = await wanChain.getBlockNumber();
+    if (blockNumber === blockNumberNew) {
+      return {blockNumber: blockNumber, balance: balance}
+    } else {
+      blockNumber = blockNumberNew;
+      balance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
+    }
+  }
 }
 
-setTimeout(async () => {
-  await scanAndCheck();
-  // await eventFilter();
-  // await getPastEvents();
-}, 0);
+// if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
+async function scanAndCheck() {
+  const from = db.getScan().blockNumber;
+  const step = parseInt(process.env.SCAN_STEP)
+  const {blockNumber, balance} = await getBalanceAndBlockNumber();
+
+  await doScan(from, step, blockNumber);
+  // check contract address balance === db.balance
+  console.log(`${balance}, db=${db.getUser(process.env.JACKPOT_ADDRESS).balance}`);
+}
+
+function init() {
+  db.init();
+  // const from = db.getScan();
+  // if (from === undefined) {
+  //   db.insertScan({blockNumber: parseInt(process.env.SCAN_FROM)});
+  // }
+}
+
+init();
+
+// setInterval(() => {
+  if (!bScanning) {
+    bScanning = true;
+    setTimeout(async () => {
+      await scanAndCheck();
+    }, 1000);
+  }
+// }, 5000)
+
+
+process.on('unhandledRejection', (err) => {
+  console.log(err);
+});

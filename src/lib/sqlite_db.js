@@ -20,8 +20,9 @@ class DB {
     let db = null;
     if (!fs.existsSync(filePath)) {
       db = new Sqlite3(filePath, {verbose: console.log});
+      const address = process.env.JACKPOT_ADDRESS.toLowerCase();
       db.exec(`
-        create table receipt (
+        create table receipts (
           transactionHash char(66) NOT NULL PRIMARY KEY,
           blockNumber integer not null unique,
           "from" char(42),
@@ -30,66 +31,74 @@ class DB {
           transactionIndex integer
         );
 
-        create table block (
+        create table blocks (
           blockHash char(66) PRIMARY KEY NOT NULL,
           blockNumber integer UNIQUE 
         );
 
-        create table account (
-          balance char(82),
-          address char(66)
+        create table users (
+          address char(66) PRIMARY KEY NOT NULL,
+          balance char(82)
         );
 
-        create table scanInfo (
+        create table scan (
           blockNumber integer
         );
 
-        create unique index block_number_tx_index on receipt (blockNumber, transactionIndex);
       `);
+      db.prepare(`insert into users values (?, ?)`).run(address,"0");
+      db.prepare(`insert into scan values (?)`).run(parseInt(process.env.SCAN_FROM));
+
+      // db.prepare(`insert into users values (${process.env.JACKPOT_ADDRESS}, "0")`).run();
+
+      // create unique index block_number_tx_index on receipts (blockNumber, transactionIndex);
     } else {
       db = new Sqlite3(filePath, {verbose: console.log});
     }
     this.db = db;
   }
 
-  insertReceipt(receipts) {
-    const db = this.db;
+  wrapTransaction(cb) {
+    const cbTransaction = this.db.transaction(cb)
+    return cbTransaction;
+  }
 
-    const insert = db.prepare(`insert into receipt values (@transactionHash, @blockNumber, @from, ?, @to, @transactionIndex)`);
-    const insertMany = db.transaction((receipts) => {
-      for (const receipt of receipts) {
-        insert.run(receipt, receipt.status ? 1 : 0);
-      }
-    });
+  insertReceipt(receipt) {
+    const insert = this.db.prepare(`insert into receipts values (@transactionHash, @blockNumber, @from, ?, @to, @transactionIndex)`);
+    let status = receipt.status;
+    if (typeof(receipt.status) === 'string') {
+      status = receipt.status === '0x1';
+    }
+    insert.run(receipt, status ? 1 : 0);
+  }
 
-    insertMany(receipts);
+  getUser(address) {
+    return this.db.prepare(`select * from users where address = ${address}`).get();
+  }
+  insertUser(user) {
+    return this.db.prepare(`insert into users value (@address, @balance)`).run(user);
+  }
+  updateUser(user) {
+    return this.db.prepare(`update users set balance = @balance`).run(user);
   }
 
   // UPDATE {Table} SET {Column} = {Column} + {Value} WHERE {Condition}
-  getScanBlockNumber() {
-    const db = this.db;
-    const sql = db.prepare(`select * from scanInfo`);
-    const scanInfo = sql.run();
-    console.log(JSON.stringify(scanInfo));
-    return scanInfo;
+  getScan() {
+    return this.db.prepare(`select blockNumber from scan`).get();
   }
 
-  saveScanBlockNumber(blockNumber) {
-    const db = this.db;
-    const sql = db.prepare(`update scanInfo set blockNumber = ${blockNumber}`);
-    try {
-      const b = sql.run();
-      console.log(JSON.stringify(b));
-      return b;
-    } catch(e) {
-      console.log(`saveScanBlockNumber ${blockNumber} error = ${e}`);
-    }
+  insertScan(item) {
+    this.db.prepare(`insert into scan values (@blockNumber)`).run(item);
+  }
+
+  updateScan(item) {
+    this.db.prepare(`update scan set blockNumber = @blockNumber`).run(item);
   }
 
   selectAll() {
     const db = this.db;
 
-    const selectAll = db.prepare(`select * from receipt order by blockNumber`);
+    const selectAll = db.prepare(`select * from receipts order by blockNumber`);
     const receipts = selectAll.all();
     receipts.forEach(receipt => {
       receipt.status = receipt.status ? true : false
@@ -97,12 +106,6 @@ class DB {
 
     console.log(JSON.stringify(receipts));
     return receipts;
-  }
-
-  update(receipt) {
-    // const db = this.db;
-
-    // const update = db.prepare(`update `)
   }
 
   close() {
