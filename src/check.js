@@ -7,8 +7,6 @@ const path = require('path');
 const fs = require('fs');
 const db = require('./lib/sqlite_db');
 
-db.init();
-
 async function checkBalance() {
   // emit FeeSend(owner(), feeAmount)
   // balance =   buy   + runDelegateOut   + subsidy       + posPrize（暂时无法得到）
@@ -37,15 +35,19 @@ const feeSendEvent = web3.utils.keccak256("FeeSend(address,uint256)");
 const delegateOutEvent = web3.utils.keccak256("DelegateOut(address,uint256)");
 const delegateInEvent = web3.utils.keccak256("DelegateIn(address,uint256)");
 const subsidyInEvent = web3.utils.keccak256("SubsidyIn(address,uint256)");
+const ownershipTransferredEvent = web3.utils.keccak256("OwnershipTransferred(address,address)");
+const upgradedEvent = web3.utils.keccak256("Upgraded(address)");
 
 // update
-function updateUserBalance(bAdd, amount, user) {
+function updateUserBalance(bAdd, amount, user, userAddress) {
   if (user) {
+    const oldBalance = web3.utils.toBN(user.balance);
+    const deltaBalance = web3.utils.toBN(amount);
     if (bAdd) {
-      user.balance = web3.utils.toBN(user.balance).add(web3.utils.toBN(amount)).toString(10)
+      user.balance = oldBalance.add(deltaBalance).toString(10)
     } else {
-      if (user.balance.cmp(web3.utils.toBN(amount)) > 0) {
-        user.balance = web3.utils.toBN(user.balance).sub(web3.utils.toBN(amount)).toString(10)
+      if (oldBalance.cmp(deltaBalance) > 0) {
+        user.balance = oldBalance.sub(deltaBalance).toString(10)
       } else {
         throw `user: ${JSON.stringify(user)} balance not enough`;
       }
@@ -53,33 +55,33 @@ function updateUserBalance(bAdd, amount, user) {
     db.updateUser(user);
   } else {
     if (bAdd) {
-      db.insertUser({address: obj.address, balance: obj.stakeAmount});
+      db.insertUser({address: userAddress.toLowerCase(), balance: amount});
     } else {
-      throw `user: ${JSON.stringify(user)} balance not enough`;
+      throw `user: ${userAddress} balance not enough`;
     }
   }
 }
 
 function updateContractBalance(bAdd, amount) {
   const contractUser = db.getUser(process.env.JACKPOT_ADDRESS);
-  updateUserBalance(bAdd, obj.stakeAmount, contractUser);
+  updateUserBalance(bAdd, amount, contractUser, process.env.JACKPOT_ADDRESS);
 }
 
 // event Buy( address indexed user, uint256 stakeAmount, uint256[] codes, uint256[] amounts );
 function buy(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
-  updateUserBalance(true, obj.stakeAmount, user);
+  updateUserBalance(true, obj.stakeAmount, user, obj.user);
   updateContractBalance(true, obj.stakeAmount);
 }
 
 // event Redeem(address indexed user, bool indexed success, uint256[] codes, uint256 amount);
 function redeem(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
-  updateUserBalance(false, obj.amount, user);
+  updateUserBalance(false, obj.amount, user, obj.user);
   updateContractBalance(false, obj.amount);
 }
 
@@ -93,7 +95,7 @@ function prizeWithdraw(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
-  updateUserBalance(false, obj.amount, user);
+  updateUserBalance(false, obj.amount, user, obj.user);
   updateContractBalance(false, obj.amount);
 }
 
@@ -107,7 +109,7 @@ function subsidyRefund(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.refundAddress);
-  updateUserBalance(false, obj.amount, user);
+  updateUserBalance(false, obj.amount, user, obj.refundAddress);
   updateContractBalance(false, obj.amount);
 }
 
@@ -125,7 +127,7 @@ function feeSend(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.owner);
-  updateUserBalance(true, obj.amount, user);
+  updateUserBalance(true, obj.amount, user, obj.owner);
   updateContractBalance(false, obj.amount);
 
 }
@@ -135,7 +137,7 @@ function delegateOut(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
-  updateUserBalance(false, obj.amount, user);
+  updateUserBalance(false, obj.amount, user, obj.validator);
   updateContractBalance(true, obj.amount);
 }
 
@@ -157,6 +159,14 @@ function subsidyIn(log) {
   updateContractBalance(true, obj.amount);
 }
 
+function ownershipTransferred(log) {
+  console.log(JSON.stringify(log.returnValues));
+}
+
+function upgraded(log) {
+  console.log(JSON.stringify(log.returnValues));
+}
+
 const handlers = {};
 
 handlers[buyEvent] = buy;
@@ -171,6 +181,8 @@ handlers[feeSendEvent] = feeSend;
 handlers[delegateOutEvent] = delegateOut;
 handlers[delegateInEvent] = delegateIn;
 handlers[subsidyInEvent] = subsidyIn;
+handlers[ownershipTransferredEvent] = ownershipTransferred;
+handlers[upgradedEvent] = upgraded;
 
 // for (it in handlers) {
 //   `
@@ -254,6 +266,9 @@ function parseReceipt(receipts, next) {
       const logs = receipt.logs;
       logs.forEach(log => {
         if (log.topics.length > 0) {
+          if (!jackPot.contract.events[log.topics[0]]) {
+            console.log(JSON.stringify(log));
+          }
           const event = jackPot.contract.events[log.topics[0]]();
           const logObj = event._formatOutput(log);
           handlers[log.raw.topics[0]](logObj);
@@ -264,7 +279,7 @@ function parseReceipt(receipts, next) {
     }
   })
 
-  db.insertScan({blockNumber: parseInt(next)});
+  db.updateScan({blockNumber: parseInt(next)});
 
   return failedTxs;
 }
@@ -277,7 +292,7 @@ async function doScan(from, step, to) {
   }
 
   const receipts = await scanTx(from, next);
-  const transaction = db.wrapTransaction(parseReceipt);
+  const transaction = db.db.transaction(parseReceipt);
   const failedTxs = transaction(receipts, next);
 
   if (failedTxs.length > 0) {
@@ -309,7 +324,7 @@ async function getBalanceAndBlockNumber() {
 
 // if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
 async function scanAndCheck() {
-  const from = db.getScan().blockNumber;
+  const from = db.getScan().blockNumber + 1;
   const step = parseInt(process.env.SCAN_STEP)
   const {blockNumber, balance} = await getBalanceAndBlockNumber();
 
@@ -320,10 +335,6 @@ async function scanAndCheck() {
 
 function init() {
   db.init();
-  // const from = db.getScan();
-  // if (from === undefined) {
-  //   db.insertScan({blockNumber: parseInt(process.env.SCAN_FROM)});
-  // }
 }
 
 init();

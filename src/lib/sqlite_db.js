@@ -24,7 +24,7 @@ class DB {
       db.exec(`
         create table receipts (
           transactionHash char(66) NOT NULL PRIMARY KEY,
-          blockNumber integer not null unique,
+          blockNumber integer not null,
           "from" char(42),
           status boolean,
           "to" char(42),
@@ -47,7 +47,7 @@ class DB {
 
       `);
       db.prepare(`insert into users values (?, ?)`).run(address,"0");
-      db.prepare(`insert into scan values (?)`).run(parseInt(process.env.SCAN_FROM));
+      db.prepare(`insert into scan values (?)`).run(parseInt(process.env.SCAN_FROM) - 1);
 
       // db.prepare(`insert into users values (${process.env.JACKPOT_ADDRESS}, "0")`).run();
 
@@ -56,11 +56,6 @@ class DB {
       db = new Sqlite3(filePath, {verbose: console.log});
     }
     this.db = db;
-  }
-
-  wrapTransaction(cb) {
-    const cbTransaction = this.db.transaction(cb)
-    return cbTransaction;
   }
 
   insertReceipt(receipt) {
@@ -73,13 +68,13 @@ class DB {
   }
 
   getUser(address) {
-    return this.db.prepare(`select * from users where address = ${address}`).get();
+    return this.db.prepare(`select * from users where address = ?`).get(address.toLowerCase());
   }
   insertUser(user) {
-    return this.db.prepare(`insert into users value (@address, @balance)`).run(user);
+    return this.db.prepare(`insert into users values (@address, @balance)`).run(user);
   }
   updateUser(user) {
-    return this.db.prepare(`update users set balance = @balance`).run(user);
+    return this.db.prepare(`update users set balance = @balance where address = @address`).run(user);
   }
 
   // UPDATE {Table} SET {Column} = {Column} + {Value} WHERE {Condition}

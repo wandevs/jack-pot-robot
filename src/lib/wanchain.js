@@ -84,7 +84,7 @@ class WanChain {
     blocks.forEach((block) => {
       if (block.transactions) {
         block.transactions.forEach(tx => {
-          if (address === tx.to.toLowerCase()) {
+          if (tx.to !== null && address === tx.to.toLowerCase()) {
             receiptsPromise.push(new promisify(this.web3.eth.getTransactionReceipt, [tx.hash], this.web3.eth));
           }
         })
