@@ -69,7 +69,7 @@ function updateContractBalance(bAdd, amount) {
 
 // event Buy( address indexed user, uint256 stakeAmount, uint256[] codes, uint256[] amounts );
 function buy(log) {
-  // console.log(JSON.stringify(log.returnValues));
+  console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   updateUserBalance(true, obj.stakeAmount, user, obj.user);
@@ -78,7 +78,7 @@ function buy(log) {
 
 // event Redeem(address indexed user, bool indexed success, uint256[] codes, uint256 amount);
 function redeem(log) {
-  // console.log(JSON.stringify(log.returnValues));
+  console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   updateUserBalance(false, obj.amount, user, obj.user);
@@ -87,7 +87,7 @@ function redeem(log) {
 
 // event GasNotEnough();
 function gasNotEnough(log) {
-
+  console.log(JSON.stringify(log.returnValues));
 }
 
 // event PrizeWithdraw(address indexed user, bool indexed success, uint256 amount);
@@ -101,7 +101,7 @@ function prizeWithdraw(log) {
 
 // event UpdateSuccess();
 function updateSuccess(log) {
-
+  console.log(JSON.stringify(log.returnValues));
 }
 
 // event SubsidyRefund(address indexed refundAddress, uint256 amount);
@@ -115,11 +115,12 @@ function subsidyRefund(log) {
 
 // event RandomGenerate(uint256 indexed epochID, uint256 random);
 function randomGenerate(log) {
-
+  console.log(JSON.stringify(log.returnValues));
 }
 
 // event LotteryResult(uint256 indexed epochID, uint256 winnerCode, uint256 prizePool, address[] winners, uint256[] amounts);
 function lotteryResult(log) {
+  console.log(JSON.stringify(log.returnValues));
 }
 
 // event FeeSend(address indexed owner, uint256 indexed amount);
