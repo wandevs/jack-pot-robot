@@ -38,6 +38,11 @@ const subsidyInEvent = web3.utils.keccak256("SubsidyIn(address,uint256)");
 const ownershipTransferredEvent = web3.utils.keccak256("OwnershipTransferred(address,address)");
 const upgradedEvent = web3.utils.keccak256("Upgraded(address)");
 
+// event delegateIn(address indexed sender, address indexed posAddress, uint indexed v)
+const posDelegateInEvent = web3.utils.keccak256("delegateIn(address,address,uint256)");
+// event delegateOut(address indexed sender, address indexed posAddress)
+const posDelegateOutEvent = web3.utils.keccak256("delegateOut(address,address)");
+
 // update
 function updateUserBalance(bAdd, amount, user, userAddress) {
   if (user) {
@@ -142,12 +147,13 @@ function delegateOut(log) {
   updateContractBalance(true, obj.amount);
 }
 
+// event delegateIn(address indexed sender, address indexed posAddress, uint indexed v)
 // event DelegateIn(address indexed validator, uint256 amount);
 function delegateIn(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
-  updateUserBalance(true, obj.amount, user);
+  updateUserBalance(true, obj.amount, user, obj.validator);
   updateContractBalance(false, obj.amount);
 }
 
@@ -156,7 +162,7 @@ function subsidyIn(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.sender);
-  updateUserBalance(true, obj.amount, user);
+  updateUserBalance(true, obj.amount, user, obj.sender);
   updateContractBalance(true, obj.amount);
 }
 
@@ -165,6 +171,12 @@ function ownershipTransferred(log) {
 }
 
 function upgraded(log) {
+  console.log(JSON.stringify(log.returnValues));
+}
+function posDelegateOut(log) {
+  console.log(JSON.stringify(log.returnValues));
+}
+function posDelegateIn(log) {
   console.log(JSON.stringify(log.returnValues));
 }
 
@@ -184,6 +196,8 @@ handlers[delegateInEvent] = delegateIn;
 handlers[subsidyInEvent] = subsidyIn;
 handlers[ownershipTransferredEvent] = ownershipTransferred;
 handlers[upgradedEvent] = upgraded;
+handlers[posDelegateOutEvent] = posDelegateOut;
+handlers[posDelegateInEvent] = posDelegateIn;
 
 // for (it in handlers) {
 //   `
@@ -268,11 +282,15 @@ function parseReceipt(receipts, next) {
       logs.forEach(log => {
         if (log.topics.length > 0) {
           if (!jackPot.contract.events[log.topics[0]]) {
-            console.log(JSON.stringify(log));
+            // pos events
+            handlers[log.topics[0]](log);
+          } else {
+            // jackpot events
+            const event = jackPot.contract.events[log.topics[0]]();
+            const logObj = event._formatOutput(log);
+            // handlers[log.raw.topics[0]](logObj);
+            handlers[log.raw.topics[0]](logObj);
           }
-          const event = jackPot.contract.events[log.topics[0]]();
-          const logObj = event._formatOutput(log);
-          handlers[log.raw.topics[0]](logObj);
         }
       })
     } else {

@@ -151,7 +151,7 @@ async function customerClean() {
 // const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");ss
 async function testCore() {
   await jackPot.open();
-  // await customerBuyAndRedeem();
+  await customerBuyAndRedeem();
   await jackPot.update();
   const {isSetValidator, isDelegateOut} = await jackPot.chooseValidator();
   if (isSetValidator) {
