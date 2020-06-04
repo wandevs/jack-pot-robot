@@ -305,8 +305,117 @@ class JackPot {
       return await wanChain.getScVar("operator", this.contract, abiJackPot);
   }
 
-  parseEventLotteryLog(log) {
-    return this.contract._decodeEventABI(log);
+  //////////////
+//   getStorageAt(address: string, position: number | BigNumber | BN | string): Promise<string>;
+//   getStorageAt(
+//       address: string,
+//       position: number | BigNumber | BN | string,
+//       defaultBlock: BlockNumber
+//   ): Promise<string>;
+//   getStorageAt(
+//       address: string,
+//       position: number | BigNumber | BN | string,
+//       callback?: (error: Error, storageAt: string) => void
+//   ): Promise<string>;
+//   getStorageAt(
+//       address: string,
+//       position: number | BigNumber | BN | string,
+//       defaultBlock: BlockNumber,
+//       callback?: (error: Error, storageAt: string) => void
+//   ): Promise<string>;
+
+// struct UintData {
+//     mapping(bytes => mapping(bytes => uint))           _storage;
+// }
+// 0
+// owner
+// 1 - 5
+// BasicStorageLib.UintData    internal uintData; ==> UintData uintData
+// BasicStorageLib.BoolData    internal boolData;
+// BasicStorageLib.AddressData internal addressData;
+// BasicStorageLib.BytesData   internal bytesData;
+// BasicStorageLib.StringData  internal stringData;
+// 6
+// uint256 public maxCount = 50;
+// 7
+// uint256 public minAmount = 10 ether;
+// 8
+// uint256 public minGasLeft = 100000;
+// 9
+// uint256 public firstDelegateMinValue = 100 ether;
+// 10 { uint256 prize; uint256 codeCount; mapping(uint256 => uint256) indexCodeMap;}
+// mapping(address => UserInfo) public userInfoMap;
+// 11
+// mapping(uint256 => CodeInfo) public indexCodeMap;
+// 12
+// uint256 public pendingRedeemStartIndex;
+// 13
+// uint256 public pendingRedeemCount;
+// 14
+// mapping(uint256 => PendingRedeem) public pendingRedeemMap;
+// 15
+// mapping(address => mapping(uint256 => uint256)) public pendingRedeemSearchMap;
+// 16
+// uint256 public pendingPrizeWithdrawStartIndex;
+// 17
+// uint256 public pendingPrizeWithdrawCount;
+// 18
+// mapping(uint256 => address) public pendingPrizeWithdrawMap;
+// 19 - 20 - 21
+// ValidatorsInfo public validatorsInfo;
+// 22
+// mapping(uint256 => address) public validatorsMap;
+// 23
+// mapping(address => uint256) public validatorIndexMap;
+// 24
+// mapping(address => uint256) public validatorsAmountMap;
+// 25
+// uint256 public delegateOutAmount;
+// 26 - 27 - 28 - 29
+// PoolInfo public poolInfo;
+// 30 - 31 - 32 - (33 - 34)
+// SubsidyInfo public subsidyInfo;
+// 35
+// mapping(address => uint256) public subsidyAmountMap;
+// 36
+// uint256 public feeRate = 0;
+// 37  0x9da26fc2e1d6ad9fdd46138906b0104ae68a65d8
+// address public operator;
+// 37 --- 第41位, 0x0000000000000000000000019da26fc2e1d6ad9fdd46138906b0104ae68a65d8
+// bool public closed = false;
+// 38
+// uint256 public maxDigital = 10000;
+// 39
+// uint256 public currentRandom;
+// 40
+// address public posPrecompileAddress = address(0xda);
+// 41
+// address public randomPrecompileAddress = address(0x262);
+// 41 --- 第41位， 0x0000000000000000000000010000000000000000000000000000000000000262
+// bool private _notEntered;
+
+// contract C {
+//     struct S { uint a; uint b; }
+//     uint x;
+//     mapping(uint => mapping(uint => S)) data;
+// }
+// data[4][9].b  => keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1
+// keccak256(key2, keccak256(key1 + slot)) + offset
+  async getScMap(key, slt) {
+      const sltStr = slt.toString();
+    const slot = "0".repeat(64 - sltStr.length) + sltStr;
+    console.log(slot);
+
+    // slot = 0; userInfoMap
+    const a = this.contract;
+    
+    const result = await web3.eth.getStorageAt(
+        process.env.JACKPOT_ADDRESS,
+        // web3.utils.sha3(key + slot, { encoding: 'hex' })
+        slot
+    );
+
+    return result;
   }
 }
 

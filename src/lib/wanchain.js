@@ -118,6 +118,7 @@ class WanChain {
   async getTimeByEpochID(epochId) {
     return await this.web3.pos.getTimeByEpochID(epochId);
   }
+
 }
 
 const wanChain = new WanChain();

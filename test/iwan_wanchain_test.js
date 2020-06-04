@@ -163,6 +163,7 @@ describe("iWan == wanChain test", function () {
     const b = await iWan.getTimeByEpochID(epochId);
     assert.strictEqual(a, 1589500800);
     assert.strictEqual(a, b);
-  })
+  });
+
 });
 
