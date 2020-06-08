@@ -51,7 +51,7 @@ function updateUserBalance(bAdd, amount, user, userAddress) {
     if (bAdd) {
       user.balance = oldBalance.add(deltaBalance).toString(10)
     } else {
-      if (oldBalance.cmp(deltaBalance) > 0) {
+      if (oldBalance.cmp(deltaBalance) >= 0) {
         user.balance = oldBalance.sub(deltaBalance).toString(10)
       } else {
         throw `user: ${JSON.stringify(user)} balance not enough`;
@@ -288,7 +288,6 @@ function parseReceipt(receipts, next) {
             // jackpot events
             const event = jackPot.contract.events[log.topics[0]]();
             const logObj = event._formatOutput(log);
-            // handlers[log.raw.topics[0]](logObj);
             handlers[log.raw.topics[0]](logObj);
           }
         }
@@ -346,10 +345,12 @@ async function scanAndCheck() {
   const from = db.getScan().blockNumber + 1;
   const step = parseInt(process.env.SCAN_STEP)
   const {blockNumber, balance} = await getBalanceAndBlockNumber();
+  const to = blockNumber;
+  // const to = 54719;
 
-  await doScan(from, step, blockNumber);
+  await doScan(from, step, to);
   // check contract address balance === db.balance
-  console.log(`${balance}, db=${db.getUser(process.env.JACKPOT_ADDRESS).balance}`);
+  await console.log(`${balance}, db=${db.getUser(process.env.JACKPOT_ADDRESS).balance}`);
 }
 
 function init() {

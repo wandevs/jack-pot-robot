@@ -61,6 +61,38 @@ async function printSM(slot, end) {
 	}
 }
 
+async function getScMember(slot, blockNumber) {
+	const result = await web3.eth.getStorageAt(
+		process.env.JACKPOT_ADDRESS,
+		slot,
+		blockNumber
+	);
+
+	return result;
+}
+
+async function getScPositionMember(position, blockNumber) {
+	const positionSlot = "0x" + web3.utils.leftPad(position.toString(16).replace(/^0x/i,''), 64);
+	const result = await getScMember(positionSlot, blockNumber);
+	return result;
+}
+
+function getSlotOld(key, slot, offset = 0) {
+	const padKey = web3.utils.leftPad(key.toString(16).replace(/^0x/i,''), 64);
+	const padSlot = web3.utils.leftPad(slot.toString(16).replace(/^0x/i,''), 64);
+	const content = "0x" + padKey + padSlot
+	const dynSlot = web3.utils.keccak256(content, { encoding: 'hex' });
+	const newSlot = web3.utils.toBN(dynSlot).add(web3.utils.toBN(offset));
+	return "0x" + newSlot.toString("hex");
+}
+
+function getSlot(key, slot, offset = 0) {
+	const dynSlot = web3.utils.soliditySha3(web3.utils.toBN(key), web3.utils.toBN(slot));
+	const newSlot = web3.utils.toBN(dynSlot).add(web3.utils.toBN(offset));
+	return "0x" + newSlot.toString("hex");
+}
+
+// 10 
 // struct UserInfo {
 // 	uint256 prize;
 // 	uint256 codeCount;
@@ -68,47 +100,92 @@ async function printSM(slot, end) {
 // 	mapping(uint256 => uint256) codeIndexMap;      // map: userCode => index
 // 	mapping(uint256 => uint256) codeAmountMap;     // map: userCode => amount
 // }
-async function getScMember(slot) {
-	const result = await web3.eth.getStorageAt(
-		process.env.JACKPOT_ADDRESS,
-		slot
-	);
+async function getUserInfo(address, blockNumber) {
+	const position = 10;
+	const userInfo = {address: address};
 
-	if (typeof (result) !== "string")
-		console.log(JSON.stringify(result));
-	else {
-		console.log(result);
+	const prizeSlot = getSlot(address, position, 0);
+	const prize = web3.utils.toBN(await getScMember(prizeSlot, blockNumber)).toNumber();
+	console.log(`prize = ${prize}`);
+	userInfo.prize = web3.utils.toBN(prize);
+
+	const codeCountSlot = getSlot(address, position, 1);
+	const codeCount = web3.utils.toBN(await getScMember(codeCountSlot, blockNumber)).toNumber();
+	console.log(`codeCount = ${codeCount}`);
+	userInfo.codeCount = web3.utils.toBN(codeCount);
+
+	userInfo.indexCodeMap = {};
+	userInfo.codeIndexMap = {};
+	userInfo.codeAmountMap = {};
+
+	const userInfoMap_indexCodeMap_Slot = getSlot(address, position, 2);
+	const userInfoMap_codeIndexMap_Slot = getSlot(address, position, 3);
+	const userInfoMap_codeAmountMap_Slot = getSlot(address, position, 4);
+
+	for(let i = 0; i < codeCount; i++) {
+		const indexCodeMapSlot = getSlot(i, userInfoMap_indexCodeMap_Slot);
+		const code = await getScMember(indexCodeMapSlot, blockNumber);
+		console.log(`i = ${i}, code = ${code}`);
+		userInfo.indexCodeMap[i] = web3.utils.toBN(code);
+
+		const codeIndexMapSlot = getSlot(code, userInfoMap_codeIndexMap_Slot);
+		const index = await getScMember(codeIndexMapSlot, blockNumber);
+		console.log(`code = ${code}, index = ${index}`);
+		userInfo.codeIndexMap[code] = web3.utils.toBN(index);
+
+		const slot = getSlot(code, userInfoMap_codeAmountMap_Slot);
+		const amount = await getScMember(slot, blockNumber);
+		console.log(`i = ${i}, amount = ${amount}`);
+		userInfo.codeAmountMap[i] = web3.utils.toBN(amount);
 	}
-	return result;
+
+	return userInfo;
+}
+// 6
+// uint256 public maxCount = 50;
+async function maxCount(blockNumber) {
+	const mc = await getScPositionMember(6, blockNumber);
+	console.log(`maxCount = ${mc}`);
 }
 
-function p64(key) {
-	return "0".repeat(64 - key.length) + key;
+// 11
+// mapping(uint256 => CodeInfo) public indexCodeMap;
+
+// 12
+// uint256 public pendingRedeemStartIndex;
+async function pendingRedeemStartIndex(blockNumber) {
+	const startIndex = await getScPositionMember(12, blockNumber);
+	console.log(`pendingRedeemStartIndex = ${startIndex}`);
 }
 
-function getSlot(key, slot, offset = 0) {
-	const padKey = web3.utils.leftPad(key.toString(16).replace(/^0x/i,''), 64);
-	const padSlot = web3.utils.leftPad(slot.toString(16).replace(/^0x/i,''), 64);
-	const content = padKey + padSlot
-	const dynSlot = web3.utils.sha3(content, { encoding: 'hex' });
-	const newSlot = web3.utils.toBN(dynSlot).add(web3.utils.toBN(offset));
-	return "0x" + newSlot.toString("hex");
+// 13
+// uint256 public pendingRedeemCount;
+async function pendingRedeemCount(blockNumber) {
+	const redeemCount = await getScPositionMember(13, blockNumber);
+	console.log(`pendingRedeemCount = ${redeemCount}`);
 }
 
-// userInfoMap["0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd"].indexCodeMap["0"]
+// 14
+// mapping(uint256 => PendingRedeem) public pendingRedeemMap;
+async function getPendingRedeemMap(address, userInfo, blockNumber) {
+}
+
+// mapping(address => mapping(uint256 => uint256)) public pendingRedeemSearchMap;
+async function getPendingRedeemSearchMap(address, userInfo, blockNumber) {
+	const pendingRedeemSearchMap_Map_Slot = getSlot(address, 15, 0);
+	for(let i = 0; i < userInfo.codeCount; i++) {
+		const indexCodeMapSlot = getSlot(userInfo.indexCodeMap[i], pendingRedeemSearchMap_Map_Slot);
+		const code = await getScMember(indexCodeMapSlot, blockNumber);
+		console.log(`code = ${code}, index = ${indexCodeMapSlot}`);
+	}
+}
+
 setTimeout(async () => {
-	const userInfoMap_indexCodeMap_Slot = getSlot("0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd", 10, 2);
-	const userInfoMap_codeCount_Slot = getSlot("0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd", 10, 1);
-
-	const codeCount = await getScMember(userInfoMap_codeCount_Slot);
-	console.log(codeCount);
-
-	// for(let i = 0; i < 50; i++) {
-	// 	const indexCodeMapSlot = getSlot(i, userInfoMap_indexCodeMap_Slot);
-	// 	const code = await getScMember(indexCodeMapSlot);
-	// 	console.log(`i = ${i}, code = ${code}`);
-	// }
-
+	const mc = await maxCount();
+	const pendingRedeemStartIndex_data = await pendingRedeemStartIndex();
+	const pendingRedeemCount_data = await pendingRedeemCount();
+	const userInfo = await getUserInfo("0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd");
+	// const pendingRedeemSearchMap = await getPendingRedeemSearchMap(userInfo.address, );
 	// await printSM(0, 45);
 
 }, 0);

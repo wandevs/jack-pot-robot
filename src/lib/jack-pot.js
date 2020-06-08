@@ -278,7 +278,12 @@ class JackPot {
         const data = this.contract.methods.redeem(codes).encodeABI();
         const nonce = await wanChain.getTxCount(address);
         // const gasLimit = await this.contract.methods.redeem(codes).estimateGas({gas:process.env.GASLIMIT, from: address, value:'0x00'});
-        const gasLimit = await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, '0x00', data);
+        const maxGas = parseInt(process.env.GASLIMIT);
+        let gasLimit = await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, '0x00', data);
+        gasLimit = gasLimit + 200000;
+        if (gasLimit > maxGas) {
+            gasLimit = maxGas;
+        }
         const rawTx = wanHelper.signTx(gasLimit, nonce, data, privateKey, '0x00', process.env.JACKPOT_ADDRESS);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`redeem hash: ${txHash}, codes: ${JSON.stringify(codes)}`);
@@ -343,7 +348,10 @@ class JackPot {
 // uint256 public minGasLeft = 100000;
 // 9
 // uint256 public firstDelegateMinValue = 100 ether;
-// 10 { uint256 prize; uint256 codeCount; mapping(uint256 => uint256) indexCodeMap;}
+// 10 { 
+//    uint256 prize; uint256 codeCount; mapping(uint256 => uint256) indexCodeMap;
+//    mapping(uint256 => uint256) codeIndexMap; mapping(uint256 => uint256) codeAmountMap;
+// }
 // mapping(address => UserInfo) public userInfoMap;
 // 11
 // mapping(uint256 => CodeInfo) public indexCodeMap;

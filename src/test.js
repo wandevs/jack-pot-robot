@@ -48,15 +48,15 @@ async function testLottery() {
   const curEpochID = await wanChain.getEpochID();
   const curEpochStartTime = await wanChain.getTimeByEpochID(curEpochID);
   const nextEpochStartTime = await wanChain.getTimeByEpochID(curEpochID + 1);
-  const randomGenerateTime = (nextEpochStartTime - curEpochStartTime) * 11/12 + curEpochStartTime;
+  const randomGenerateTime = (nextEpochStartTime - curEpochStartTime) * 10/12 + curEpochStartTime + 5;
   let now = new Date().getTime() / 1000;
   const waitTime = now > randomGenerateTime ? 0 : randomGenerateTime - now;
 
-  // if (waitTime > 50) {
-  //   setTimeout(async () => {
-  //     await customerBuyAndRedeem();
-  //   }, 20000);
-  // }
+  if (waitTime > 50) {
+    setTimeout(async () => {
+      await customerBuyAndRedeem();
+    }, 20000);
+  }
 
   await sleep(waitTime * 1000);
 
@@ -103,7 +103,7 @@ async function customerBuyAndRedeem() {
           codeCount = userInfo.exits.length > codeCount ? codeCount : userInfo.exits.length;
         }
       }
-      log.info(`try buy = ${isBuy}, doCount = ${codeCount}, oldCount = ${userInfo.exits.length}, from = ${keys[j].address}`);
+      log.info(`try buy = ${isBuy}, doCount = ${codeCount}, oldCount = ${userInfo.exits.length}, from = ${keys[j].address}, `);
 
       try {
         if (isBuy) {
@@ -114,6 +114,7 @@ async function customerBuyAndRedeem() {
             codes.push(code);
             amounts.push(amount);
           }
+          log.info(`code = ${JSON.stringify(codes)}`);
           await jackPot.buy(codes, amounts, keys[j].privateKey, keys[j].address);
         } else {
           const codes = [];
@@ -168,6 +169,10 @@ async function testCore() {
   setTimeout( async () => {
     await testCore();
   }, 10000);
+
+  // await jackPot.open();
+  // const codes = ["0x0000000000000000000000000000000000000000000000000000000000000e4a", "0x0000000000000000000000000000000000000000000000000000000000000f36"];
+  // await jackPot.redeem(codes, "433c18a5efc6a7db4fc00bf85dab395c7b1ebbc3456cea10dc4c527d32ceeebc", "0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd");
 }
 
 setTimeout( async () => {
