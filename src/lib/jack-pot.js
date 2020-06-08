@@ -267,7 +267,12 @@ class JackPot {
         const value = '0x' + total.toString('hex');
         const nonce = await wanChain.getTxCount(address);
         // const gasLimit = await this.contract.methods.buy(codes, amounts).estimateGas({gas:process.env.GASLIMIT, from: address, value:value});
-        const gasLimit = await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, value, data);
+        const maxGas = parseInt(process.env.GASLIMIT);
+        let gasLimit = await wanChain.estimateGas(address, process.env.JACKPOT_ADDRESS, value, data);
+        gasLimit = gasLimit + 200000;
+        if (gasLimit > maxGas) {
+            gasLimit = maxGas;
+        }
         const rawTx = wanHelper.signTx(gasLimit, nonce, data, privateKey, value, process.env.JACKPOT_ADDRESS);
         const txHash = await wanChain.sendRawTxByWeb3(rawTx);
         log.info(`buy hash: ${txHash}, count: ${codes.length}`);
