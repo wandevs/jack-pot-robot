@@ -80,9 +80,9 @@ async function testLottery() {
 }
 
 // select code and buy
-async function customerBuyAndRedeem() {
+async function customerBuyAndRedeem(noRedeem = false) {
   for (let j = 0; j < keys.length; j++) {
-    if (util.bufferToInt(crypto.randomBytes(6)) % 40 == 5) {
+    if (util.bufferToInt(crypto.randomBytes(6)) % 6 == 5) {
       const userInfo = await jackPot.getUserCodeList(keys[j].address);
       console.log(`address = ${keys[j].address}`);
       console.log(JSON.stringify(userInfo));
@@ -117,11 +117,13 @@ async function customerBuyAndRedeem() {
           log.info(`code = ${JSON.stringify(codes)}`);
           await jackPot.buy(codes, amounts, keys[j].privateKey, keys[j].address);
         } else {
-          const codes = [];
-          for (let i = 0; i < codeCount; i++) {
-            codes.push(parseInt(userInfo.codes[i], 10));
+          if (!noRedeem) {
+            const codes = [];
+            for (let i = 0; i < codeCount; i++) {
+              codes.push(parseInt(userInfo.codes[i], 10));
+            }
+            await jackPot.redeem(codes, keys[j].privateKey, keys[j].address);
           }
-          await jackPot.redeem(codes, keys[j].privateKey, keys[j].address);
         }
       } catch (e) {
         log.warn(e);
@@ -134,7 +136,7 @@ async function customerBuyAndRedeem() {
 async function customerClean() {
   for (let j = 0; j < keys.length; j++) {
     const userInfo = await jackPot.getUserCodeList(keys[j].address);
-    if (userInfo.exits.length > 0) {
+    if (userInfo && userInfo.exits.length > 0) {
       try {
         const codes = [];
         for (let i = 0; i < userInfo.codes.length; i++) {
@@ -149,10 +151,14 @@ async function customerClean() {
   }
 }
 
-// const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");ss
+// const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
 async function testCore() {
+  // const random = util.bufferToInt(crypto.randomBytes(6));
+  // if (random % 3 === 0) {
+    await customerClean();
+  // }
   await jackPot.open();
-  await customerBuyAndRedeem();
+  await customerBuyAndRedeem(true);
   await jackPot.update();
   const {isSetValidator, isDelegateOut} = await jackPot.chooseValidator();
   if (isSetValidator) {
@@ -169,10 +175,6 @@ async function testCore() {
   setTimeout( async () => {
     await testCore();
   }, 10000);
-
-  // await jackPot.open();
-  // const codes = ["0x0000000000000000000000000000000000000000000000000000000000000e4a", "0x0000000000000000000000000000000000000000000000000000000000000f36"];
-  // await jackPot.redeem(codes, "433c18a5efc6a7db4fc00bf85dab395c7b1ebbc3456cea10dc4c527d32ceeebc", "0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd");
 }
 
 setTimeout( async () => {

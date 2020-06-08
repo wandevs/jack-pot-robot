@@ -6,6 +6,7 @@ const web3_ws = require(`./lib/${process.env.CHAIN_ENGINE}`).web3_ws;
 const path = require('path');
 const fs = require('fs');
 const db = require('./lib/sqlite_db');
+const { sleep } = require("./lib/utils");
 
 async function checkBalance() {
   // emit FeeSend(owner(), feeAmount)
@@ -86,8 +87,10 @@ function redeem(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
-  updateUserBalance(false, obj.amount, user, obj.user);
-  updateContractBalance(false, obj.amount);
+  if (obj.success) {
+    updateUserBalance(false, obj.amount, user, obj.user);
+    updateContractBalance(false, obj.amount);
+  }
 }
 
 // event GasNotEnough();
@@ -100,8 +103,10 @@ function prizeWithdraw(log) {
   console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
-  updateUserBalance(false, obj.amount, user, obj.user);
-  updateContractBalance(false, obj.amount);
+  if (obj.success) {
+    updateUserBalance(false, obj.amount, user, obj.user);
+    updateContractBalance(false, obj.amount);
+  }
 }
 
 // event UpdateSuccess();
@@ -359,15 +364,14 @@ function init() {
 
 init();
 
-// setInterval(() => {
+setInterval(() => {
   if (!bScanning) {
     bScanning = true;
     setTimeout(async () => {
       await scanAndCheck();
     }, 1000);
   }
-// }, 5000)
-
+}, 5000)
 
 process.on('unhandledRejection', (err) => {
   console.log(err);

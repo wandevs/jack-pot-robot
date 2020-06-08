@@ -32,7 +32,7 @@ function generateKeyPair() {
   if (secp256k1.privateKeyVerify(randomBuf)) {
     const address = util.privateToAddress(randomBuf);
     return { 
-      privateKey: util.bufferToHex(randomBuf, 'hex'),
+      privateKey: util.bufferToHex(randomBuf, 'hex').replace(/^0x/i,''),
       address: util.bufferToHex(address,'hex')
     };
   } else {

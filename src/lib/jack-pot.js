@@ -70,9 +70,11 @@ class JackPot {
             const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
             const isOutOfGas = logs.find((log) => { log.topics[0] === outOfGasEvent });
             if (isOutOfGas) {
-                setTimeout(async () => {
-                    await this.update();
-                }, 10000)
+                // setTimeout(async () => {
+                //     await this.update();
+                // }, 0);
+
+                await this.update();
             }
         }
     }
