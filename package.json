@@ -14,7 +14,8 @@
     "testnet-buy": "node -r dotenv/config src/testnet-buy.js dotenv_config_path=.env.testnet",
     "lint": "eslint ./src",
     "test": "nyc mocha --recursive",
-    "test_db": "node -r dotenv/config node_modules/.bin/_mocha ./test/db_test.js dotenv_config_path=.env.local"
+    "test_db": "node -r dotenv/config node_modules/.bin/_mocha ./test/db_test.js dotenv_config_path=.env.local",
+    "test_jack-pot": "node -r dotenv/config ./test/jack-pot.js dotenv_config_path=.env.local"
   },
   "keywords": [],
   "author": "",

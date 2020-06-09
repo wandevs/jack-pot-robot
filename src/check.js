@@ -204,23 +204,27 @@ handlers[upgradedEvent] = upgraded;
 handlers[posDelegateOutEvent] = posDelegateOut;
 handlers[posDelegateInEvent] = posDelegateIn;
 
-// for (it in handlers) {
-//   `
-//   it = 0xf92806ed4b288c6cb9d35fccadbc6023b411ff69030ae055ecf9785b18165324
-//   it = 0x02768cf47bd502ac2b9739723150cb77b0a98950fd067287c0a65d912149a9cb
-//   it = 0x71238424bca4bc92d1155a651ad499bf349a54a66afd80751c17cab24c3cf895
-//   it = 0x8a234cda743a9f7572dc9b0b6fb2ffebf42374bb768164a04c446483579abc65
-//   it = 0xe0828ebc681453a239bd3a107defe316328dc7d2aec54a5d772da80fc136ce16
-//   it = 0xf6a1f17846607f903615c8feba44ef2affda4abfe37aed75d2ada327cfd2bdb2
-//   it = 0xd5610194069263ad05a235464e87dbb01883927cb85d14217be94e54e2458511
-//   it = 0x7d15b902c9eb1ca6750ef6c45ce33fbff1d99b2c1c3f5de8229a2bacd27aa184
-//   it = 0x30d7c727010bd07760adc4a97df25f841b278de6b8ce98061eae479bf21273f8
-//   it = 0xa38c0de852a2fafa244b1ae0dd0a953a4c002d7b54cde932d9965d9b2d390e2d
-//   it = 0x4e3aa93ab6e2e42feec798732c048a9d1e2fd6dbde19547e3ed903b3b0fea17e
-//   it = 0xff1173e2426cd768da9dd8d89f7c1d32edd76f900de72ac722cd759f5a6c5185
-//   `
-//   console.log("it = " + it);
-// }
+for (it in handlers) {
+  console.log("it = " + it);
+}
+// `
+// it = 0xf92806ed4b288c6cb9d35fccadbc6023b411ff69030ae055ecf9785b18165324
+// it = 0x02768cf47bd502ac2b9739723150cb77b0a98950fd067287c0a65d912149a9cb
+// it = 0x71238424bca4bc92d1155a651ad499bf349a54a66afd80751c17cab24c3cf895
+// it = 0x8a234cda743a9f7572dc9b0b6fb2ffebf42374bb768164a04c446483579abc65
+// it = 0xe0828ebc681453a239bd3a107defe316328dc7d2aec54a5d772da80fc136ce16
+// it = 0xf6a1f17846607f903615c8feba44ef2affda4abfe37aed75d2ada327cfd2bdb2
+// it = 0xd5610194069263ad05a235464e87dbb01883927cb85d14217be94e54e2458511
+// it = 0x7d15b902c9eb1ca6750ef6c45ce33fbff1d99b2c1c3f5de8229a2bacd27aa184
+// it = 0x30d7c727010bd07760adc4a97df25f841b278de6b8ce98061eae479bf21273f8
+// it = 0xa38c0de852a2fafa244b1ae0dd0a953a4c002d7b54cde932d9965d9b2d390e2d
+// it = 0x4e3aa93ab6e2e42feec798732c048a9d1e2fd6dbde19547e3ed903b3b0fea17e
+// it = 0xff1173e2426cd768da9dd8d89f7c1d32edd76f900de72ac722cd759f5a6c5185
+// it = 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0
+// it = 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b
+// it = 0xc56651e869741bd9650fdd984421326186e27584c2db5f5c08925631f320a39d
+// it = 0x415d10a111ef0522e5fedeec53cfc4eece3854ba6e1efdf147d5c5f6e624c1a2
+// `
 
 // web3--1.20, new interface,   gwan need open --ws --wsport 8546 --wsorigins "*"
 // async function eventFilter() {
@@ -286,14 +290,18 @@ function parseReceipt(receipts, next) {
       const logs = receipt.logs;
       logs.forEach(log => {
         if (log.topics.length > 0) {
-          if (!jackPot.contract.events[log.topics[0]]) {
-            // pos events
-            handlers[log.topics[0]](log);
-          } else {
-            // jackpot events
-            const event = jackPot.contract.events[log.topics[0]]();
-            const logObj = event._formatOutput(log);
-            handlers[log.raw.topics[0]](logObj);
+          try {
+            if (!jackPot.contract.events[log.topics[0]]) {
+              // pos events
+              handlers[log.topics[0]](log);
+            } else {
+              // jackpot events
+              const event = jackPot.contract.events[log.topics[0]]();
+              const logObj = event._formatOutput(log);
+              handlers[log.raw.topics[0]](logObj);
+            }
+          } catch (e) {
+            jackPot.logAndSendMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
           }
         }
       })

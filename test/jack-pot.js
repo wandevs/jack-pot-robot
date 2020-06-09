@@ -149,13 +149,34 @@ async function maxCount(blockNumber) {
 }
 
 // 11
+// struct CodeInfo { uint256 addrCount; mapping(uint256 => address) indexAddressMap; mapping(address => uint256) addressIndexMap; }
 // mapping(uint256 => CodeInfo) public indexCodeMap;
+async function getIndexCodeMap(index, blockNumber) {
+	const aim = {};
+	const iam = {};
+	const addrCount_Slot = getSlot(index, 11, 0);
+	const indexAddressMap_Map_Slot = getSlot(index, 11, 1);
+	const addressIndexMap_Map_Slot = getSlot(index, 11, 2);
+	const addrCount = web3.utils.toBN(await getScMember(addrCount_Slot, blockNumber)).toNumber();
+	for (let i = 0; i < addrCount; i ++) {
+		const indexAddressMap_Slot = getSlot(i, indexAddressMap_Map_Slot, 0);
+		const address = await getScMember(indexAddressMap_Slot, blockNumber);
+		const addressIndexMap_Slot = getSlot(address, addressIndexMap_Map_Slot, 0);
+		const address_index = await getScMember(addressIndexMap_Slot, blockNumber);
+		aim[i] = address;
+		iam[address] = address_index;
+	}
+	
+	let str = `index = ${index}, indexAddressMap = ${JSON.stringify(iam, null, 2)}, code = ${JSON.stringify(aim, null, 2)}`;
+	return {addrCount: addrCount, indexAddressMap: iam, addressIndexMap: aim};
+}
 
 // 12
 // uint256 public pendingRedeemStartIndex;
 async function pendingRedeemStartIndex(blockNumber) {
 	const startIndex = await getScPositionMember(12, blockNumber);
 	console.log(`pendingRedeemStartIndex = ${startIndex}`);
+	return startIndex;
 }
 
 // 13
@@ -163,29 +184,56 @@ async function pendingRedeemStartIndex(blockNumber) {
 async function pendingRedeemCount(blockNumber) {
 	const redeemCount = await getScPositionMember(13, blockNumber);
 	console.log(`pendingRedeemCount = ${redeemCount}`);
+	return redeemCount;
 }
 
 // 14
+// struct PendingRedeem {	address user; uint256 code;}
 // mapping(uint256 => PendingRedeem) public pendingRedeemMap;
-async function getPendingRedeemMap(address, userInfo, blockNumber) {
+async function getPendingRedeemMap(pendingRedeemStartIndex, pendingRedeemCount, address, blockNumber) {
+	const codes = [];
+	const allCodes = {};
+	const abi_address = "0x" + web3.utils.leftPad(address.replace(/^0x/i,''), 64);
+	for (let i = 0; i < pendingRedeemCount; i++) {
+		const pendingRedeemMap_user_Slot = getSlot(i + pendingRedeemStartIndex, 14, 0);
+		const pendingRedeemMap_code_Slot = getSlot(i + pendingRedeemStartIndex, 14, 1);
+		const user = await getScMember(pendingRedeemMap_user_Slot, blockNumber);
+		const code = await getScMember(pendingRedeemMap_code_Slot, blockNumber);
+		if (abi_address === user) {
+			codes.push(code);
+		}
+		if (!allCodes[user]) {
+			allCodes[user] = [];
+		}
+		allCodes[user].push(code);
+	}
+	let str = `user = ${address}, code = ${JSON.stringify(codes)}`;
+	return codes;
 }
 
 // mapping(address => mapping(uint256 => uint256)) public pendingRedeemSearchMap;
-async function getPendingRedeemSearchMap(address, userInfo, blockNumber) {
-	const pendingRedeemSearchMap_Map_Slot = getSlot(address, 15, 0);
-	for(let i = 0; i < userInfo.codeCount; i++) {
-		const indexCodeMapSlot = getSlot(userInfo.indexCodeMap[i], pendingRedeemSearchMap_Map_Slot);
-		const code = await getScMember(indexCodeMapSlot, blockNumber);
-		console.log(`code = ${code}, index = ${indexCodeMapSlot}`);
+async function getPendingRedeemSearchMap(userInfo, blockNumber) {
+	const abi_address = "0x" + web3.utils.leftPad(userInfo.address.replace(/^0x/i,''), 64);
+	const pendingRedeemSearchMap_Map_Slot = getSlot(abi_address, 15, 0);
+	const codes = [];
+	const count = userInfo.codeCount.toNumber();
+	for(let i = 0; i < count; i++) {
+		const indexCodeMapSlot = getSlot(userInfo.indexCodeMap[i], pendingRedeemSearchMap_Map_Slot, 0);
+		const status = await getScMember(indexCodeMapSlot, blockNumber);
+		console.log(`code = ${userInfo.indexCodeMap[i].toNumber()}, status = ${status}`);
+		codes.push({code: userInfo.indexCodeMap[i].toNumber(), status: status})
 	}
+	return codes;
 }
 
 setTimeout(async () => {
 	const mc = await maxCount();
 	const pendingRedeemStartIndex_data = await pendingRedeemStartIndex();
 	const pendingRedeemCount_data = await pendingRedeemCount();
-	const userInfo = await getUserInfo("0x5f9e5b14128a4ec9b0ce4db2d4f42e42606054dd");
-	// const pendingRedeemSearchMap = await getPendingRedeemSearchMap(userInfo.address, );
+	const userInfo = await getUserInfo("0x8096e96c82ce1ae7365e1ab3f6410f4c73871a81");
+	const codes = await getPendingRedeemMap(web3.utils.toBN(pendingRedeemStartIndex_data).toNumber(), web3.utils.toBN(pendingRedeemCount_data).toNumber(), userInfo.address);
+	const codesStatus = await getPendingRedeemSearchMap(userInfo);
+	const codeInfo = await getIndexCodeMap(9208);
 	// await printSM(0, 45);
 
 }, 0);

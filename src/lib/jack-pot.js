@@ -355,12 +355,9 @@ class JackPot {
 // uint256 public minGasLeft = 100000;
 // 9
 // uint256 public firstDelegateMinValue = 100 ether;
-// 10 { 
-//    uint256 prize; uint256 codeCount; mapping(uint256 => uint256) indexCodeMap;
-//    mapping(uint256 => uint256) codeIndexMap; mapping(uint256 => uint256) codeAmountMap;
-// }
+// 10 { uint256 prize; uint256 codeCount; mapping(uint256 => uint256) indexCodeMap; mapping(uint256 => uint256) codeIndexMap; mapping(uint256 => uint256) codeAmountMap; }
 // mapping(address => UserInfo) public userInfoMap;
-// 11
+// 11 { uint256 addrCount; mapping(uint256 => address) indexAddressMap; mapping(address => uint256) addressIndexMap; }
 // mapping(uint256 => CodeInfo) public indexCodeMap;
 // 12
 // uint256 public pendingRedeemStartIndex;
@@ -417,12 +414,8 @@ class JackPot {
 // data[4][9].b  => keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1
 // keccak256(key2, keccak256(key1 + slot)) + offset
   async getScMap(key, slt) {
-      const sltStr = slt.toString();
+    const sltStr = slt.toString();
     const slot = "0".repeat(64 - sltStr.length) + sltStr;
-    console.log(slot);
-
-    // slot = 0; userInfoMap
-    const a = this.contract;
     
     const result = await web3.eth.getStorageAt(
         process.env.JACKPOT_ADDRESS,
