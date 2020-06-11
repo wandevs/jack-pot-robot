@@ -87,4 +87,4 @@ setTimeout(async () => {
   await jackPot.logAndSendMail("mainnet Jack's Pot robot start", `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
 }, 0);
 
-// robotSchedules();
+robotSchedules();

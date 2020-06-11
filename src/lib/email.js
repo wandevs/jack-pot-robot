@@ -5,7 +5,7 @@ log.info("lib email init");
 
 // qq email
 // const transporter = nodeMailer.createTransport({
-//   service: process.env.EMAIL_PORT,
+//   service: process.env.EMAIL_SERVICE,
 //   port: parseInt(process.env.EMAIL_PORT), // SMTP port
 //   secureConnection: true, // 使用了 SSL
 //   auth: {
