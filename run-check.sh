@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd "$(dirname "$0")"
-npm run robot_mainnet
+npm run check_mainnet
