@@ -83,7 +83,7 @@ class IWan {
   }
 
   async estimateGas(from, to, value, data) {
-    return await this.apiClient.estimateGas(process.env.IWAN_CHAINTYPE, {from, to, value, data})
+    return Number(await this.apiClient.estimateGas(process.env.IWAN_CHAINTYPE, {from, to, value, data}))
   }
 
   async getTxsBetween(address, fromBlock, toBlock) {
