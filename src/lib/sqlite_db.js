@@ -19,7 +19,8 @@ class DB {
 
     let db = null;
     if (!fs.existsSync(filePath)) {
-      db = new Sqlite3(filePath, {verbose: console.log});
+      // db = new Sqlite3(filePath, {verbose: console.log});
+      db = new Sqlite3(filePath);
       const address = process.env.JACKPOT_ADDRESS.toLowerCase();
       db.exec(`
         create table receipts (
@@ -53,7 +54,8 @@ class DB {
 
       // create unique index block_number_tx_index on receipts (blockNumber, transactionIndex);
     } else {
-      db = new Sqlite3(filePath, {verbose: console.log});
+      // db = new Sqlite3(filePath, {verbose: console.log});
+      db = new Sqlite3(filePath);
     }
     this.db = db;
   }

@@ -75,7 +75,6 @@ function updateContractBalance(bAdd, amount) {
 
 // event Buy( address indexed user, uint256 stakeAmount, uint256[] codes, uint256[] amounts );
 function buy(log) {
-  console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   updateUserBalance(true, obj.stakeAmount, user, obj.user);
@@ -84,7 +83,6 @@ function buy(log) {
 
 // event Redeem(address indexed user, bool indexed success, uint256[] codes, uint256 amount);
 function redeem(log) {
-  console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   if (obj.success) {
@@ -95,12 +93,12 @@ function redeem(log) {
 
 // event GasNotEnough();
 function gasNotEnough(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 
 // event PrizeWithdraw(address indexed user, bool indexed success, uint256 amount);
 function prizeWithdraw(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   if (obj.success) {
@@ -111,13 +109,13 @@ function prizeWithdraw(log) {
 
 // event UpdateSuccess();
 function updateSuccess(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   // TODO: check "prizePool + delegatePool + demandDepositPool  =   balance" in db, but can't get delta amount of pools
 }
 
 // event SubsidyRefund(address indexed refundAddress, uint256 amount);
 function subsidyRefund(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.refundAddress);
   updateUserBalance(false, obj.amount, user, obj.refundAddress);
@@ -126,17 +124,17 @@ function subsidyRefund(log) {
 
 // event RandomGenerate(uint256 indexed epochID, uint256 random);
 function randomGenerate(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 
 // event LotteryResult(uint256 indexed epochID, uint256 winnerCode, uint256 prizePool, address[] winners, uint256[] amounts);
 function lotteryResult(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 
 // event FeeSend(address indexed owner, uint256 indexed amount);
 function feeSend(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.owner);
   updateUserBalance(true, obj.amount, user, obj.owner);
@@ -146,7 +144,7 @@ function feeSend(log) {
 
 // event DelegateOut(address indexed validator, uint256 amount);
 function delegateOut(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
   updateUserBalance(false, obj.amount, user, obj.validator);
@@ -156,7 +154,7 @@ function delegateOut(log) {
 // event delegateIn(address indexed sender, address indexed posAddress, uint indexed v)
 // event DelegateIn(address indexed validator, uint256 amount);
 function delegateIn(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
   updateUserBalance(true, obj.amount, user, obj.validator);
@@ -165,7 +163,7 @@ function delegateIn(log) {
 
 // event SubsidyIn(address indexed sender, uint256 amount);
 function subsidyIn(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.sender);
   updateUserBalance(true, obj.amount, user, obj.sender);
@@ -173,17 +171,17 @@ function subsidyIn(log) {
 }
 
 function ownershipTransferred(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 
 function upgraded(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 function posDelegateOut(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 function posDelegateIn(log) {
-  console.log(JSON.stringify(log.returnValues));
+  // console.log(JSON.stringify(log.returnValues));
 }
 
 const handlers = {};
@@ -302,7 +300,7 @@ function parseReceipt(receipts, next) {
               handlers[log.raw.topics[0]](logObj);
             }
           } catch (e) {
-            await jackPot.logAndSendMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
+            jackPot.logAndSendMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
           }
         }
       });
@@ -362,9 +360,9 @@ async function scanAndCheck() {
   const to = blockNumber;
   // const to = 54719;
 
+  log.info(`scanAndCheck from=${from},to=${to}`);
   await doScan(from, step, to);
   // check contract address balance === db.balance
-  console.log(`${balance}, db=${db.getUser(process.env.JACKPOT_ADDRESS).balance}`);
   const jackPotBalance = web3.utils.toBN(balance);
   const dbBalance = web3.utils.toBN(db.getUser(process.env.JACKPOT_ADDRESS).balance);
   if (jackPotBalance.cmp(dbBalance) < 0) {
@@ -388,5 +386,5 @@ setInterval(() => {
 }, 5000)
 
 process.on('unhandledRejection', (err) => {
-  console.log(err);
+  jackPot.logAndSendMail('unhandled exception', `${err}`);
 });
