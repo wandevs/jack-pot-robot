@@ -113,3 +113,4 @@ dist
 .idea/
 .vscode/
 bundle/
+/db/*.db
