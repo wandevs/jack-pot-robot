@@ -381,9 +381,9 @@ setInterval(() => {
     bScanning = true;
     setTimeout(async () => {
       await scanAndCheck();
-    }, 1000);
+    }, 0);
   }
-}, 5000)
+}, parseInt(process.env.CHECK_INTERVAL));
 
 process.on('unhandledRejection', (err) => {
   jackPot.logAndSendMail('unhandled exception', `${err}`);
