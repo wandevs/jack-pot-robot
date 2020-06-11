@@ -21,7 +21,7 @@ class JackPot {
 
         this.myValidators = JSON.parse(process.env.POS_VALIDATORS);
         this.contract = new web3.eth.Contract(abiJackPot, process.env.JACKPOT_ADDRESS);
-        this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.Delegator_Per_Max_Amount));
+        this.perMaxAmount = web3.utils.toBN(web3.utils.toWei(process.env.DELEGATOR_PER_MAX_AMOUNT));
         this.zeroAmount = web3.utils.toBN(0);
     }
 
@@ -70,11 +70,9 @@ class JackPot {
             const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
             const isOutOfGas = logs.find((log) => { log.topics[0] === outOfGasEvent });
             if (isOutOfGas) {
-                // setTimeout(async () => {
-                //     await this.update();
-                // }, 0);
-
-                await this.update();
+                setTimeout(async () => {
+                    await this.update();
+                }, 0);
             }
         }
     }

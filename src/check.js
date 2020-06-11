@@ -6,7 +6,7 @@ const web3_ws = require(`./lib/${process.env.CHAIN_ENGINE}`).web3_ws;
 const path = require('path');
 const fs = require('fs');
 const db = require('./lib/sqlite_db');
-const { sleep } = require("./lib/utils");
+const { sleep } = require('./lib/utils');
 
 async function checkBalance() {
   // emit FeeSend(owner(), feeAmount)
@@ -24,25 +24,25 @@ async function checkBalance() {
 }
 
 
-const buyEvent = web3.utils.keccak256("Buy(address,uint256,uint256[],uint256[])");
-const redeemEvent = web3.utils.keccak256("Redeem(address,bool,uint256[],uint256)");
-const gasNotEnoughEvent = web3.utils.keccak256("GasNotEnough()");
-const prizeWithdrawEvent = web3.utils.keccak256("PrizeWithdraw(address,bool,uint256)");
-const updateSuccessEvent = web3.utils.keccak256("UpdateSuccess()");
-const subsidyRefundEvent = web3.utils.keccak256("SubsidyRefund(address,uint256)");
-const randomGenerateEvent = web3.utils.keccak256("RandomGenerate(uint256,uint256)");
-const lotteryResultEvent = web3.utils.keccak256("LotteryResult(uint256,uint256,uint256,address[],uint256[])");
-const feeSendEvent = web3.utils.keccak256("FeeSend(address,uint256)");
-const delegateOutEvent = web3.utils.keccak256("DelegateOut(address,uint256)");
-const delegateInEvent = web3.utils.keccak256("DelegateIn(address,uint256)");
-const subsidyInEvent = web3.utils.keccak256("SubsidyIn(address,uint256)");
-const ownershipTransferredEvent = web3.utils.keccak256("OwnershipTransferred(address,address)");
-const upgradedEvent = web3.utils.keccak256("Upgraded(address)");
+const buyEvent = web3.utils.keccak256('Buy(address,uint256,uint256[],uint256[])');
+const redeemEvent = web3.utils.keccak256('Redeem(address,bool,uint256[],uint256)');
+const gasNotEnoughEvent = web3.utils.keccak256('GasNotEnough()');
+const prizeWithdrawEvent = web3.utils.keccak256('PrizeWithdraw(address,bool,uint256)');
+const updateSuccessEvent = web3.utils.keccak256('UpdateSuccess()');
+const subsidyRefundEvent = web3.utils.keccak256('SubsidyRefund(address,uint256)');
+const randomGenerateEvent = web3.utils.keccak256('RandomGenerate(uint256,uint256)');
+const lotteryResultEvent = web3.utils.keccak256('LotteryResult(uint256,uint256,uint256,address[],uint256[])');
+const feeSendEvent = web3.utils.keccak256('FeeSend(address,uint256)');
+const delegateOutEvent = web3.utils.keccak256('DelegateOut(address,uint256)');
+const delegateInEvent = web3.utils.keccak256('DelegateIn(address,uint256)');
+const subsidyInEvent = web3.utils.keccak256('SubsidyIn(address,uint256)');
+const ownershipTransferredEvent = web3.utils.keccak256('OwnershipTransferred(address,address)');
+const upgradedEvent = web3.utils.keccak256('Upgraded(address)');
 
 // event delegateIn(address indexed sender, address indexed posAddress, uint indexed v)
-const posDelegateInEvent = web3.utils.keccak256("delegateIn(address,address,uint256)");
+const posDelegateInEvent = web3.utils.keccak256('delegateIn(address,address,uint256)');
 // event delegateOut(address indexed sender, address indexed posAddress)
-const posDelegateOutEvent = web3.utils.keccak256("delegateOut(address,address)");
+const posDelegateOutEvent = web3.utils.keccak256('delegateOut(address,address)');
 
 // update
 function updateUserBalance(bAdd, amount, user, userAddress) {
@@ -112,6 +112,7 @@ function prizeWithdraw(log) {
 // event UpdateSuccess();
 function updateSuccess(log) {
   console.log(JSON.stringify(log.returnValues));
+  // TODO: check "prizePool + delegatePool + demandDepositPool  =   balance" in db, but can't get delta amount of pools
 }
 
 // event SubsidyRefund(address indexed refundAddress, uint256 amount);
@@ -204,9 +205,9 @@ handlers[upgradedEvent] = upgraded;
 handlers[posDelegateOutEvent] = posDelegateOut;
 handlers[posDelegateInEvent] = posDelegateIn;
 
-for (it in handlers) {
-  console.log("it = " + it);
-}
+// for (it in handlers) {
+//   console.log("it = " + it);
+// }
 // `
 // it = 0xf92806ed4b288c6cb9d35fccadbc6023b411ff69030ae055ecf9785b18165324
 // it = 0x02768cf47bd502ac2b9739723150cb77b0a98950fd067287c0a65d912149a9cb
@@ -301,10 +302,10 @@ function parseReceipt(receipts, next) {
               handlers[log.raw.topics[0]](logObj);
             }
           } catch (e) {
-            jackPot.logAndSendMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
+            await jackPot.logAndSendMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
           }
         }
-      })
+      });
     } else {
       failedTxs.push(receipt);
     }
@@ -327,7 +328,7 @@ async function doScan(from, step, to) {
   const failedTxs = transaction(receipts, next);
 
   if (failedTxs.length > 0) {
-    jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs, null, 2));
+    await jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs, null, 2));
   }
 
   if (next < to) {
@@ -363,7 +364,12 @@ async function scanAndCheck() {
 
   await doScan(from, step, to);
   // check contract address balance === db.balance
-  await console.log(`${balance}, db=${db.getUser(process.env.JACKPOT_ADDRESS).balance}`);
+  console.log(`${balance}, db=${db.getUser(process.env.JACKPOT_ADDRESS).balance}`);
+  const jackPotBalance = web3.utils.toBN(balance);
+  const dbBalance = web3.utils.toBN(db.getUser(process.env.JACKPOT_ADDRESS).balance);
+  if (jackPotBalance.cmp(dbBalance) < 0) {
+    await jackPot.logAndSendMail("jackPotBalance error", `from=${from}, to=${to}, contract balance = ${web3.utils.fromWei(jackPotBalance)}, db balance = ${web3.utils.fromWei(dbBalance)}`);
+  }
 }
 
 function init() {
