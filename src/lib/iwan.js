@@ -65,7 +65,11 @@ class IWan {
   };
 
   async getTransactionReceipt(txHash) {
-    return await this.apiClient.getTransactionReceipt(process.env.IWAN_CHAINTYPE, txHash);
+    try {
+      return await this.apiClient.getTransactionReceipt(process.env.IWAN_CHAINTYPE, txHash);
+    } catch (e) {
+      return null;
+    }
   }
 
   async getStakerInfo(blockNumber) {

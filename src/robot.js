@@ -13,8 +13,8 @@ async function doSchedule(name, tryTimes = process.env.JACKPOT_OPERATOR_RETRY_TI
       leftTime --;
       return await jackPot[name]();
     } catch (e) {
-      if (tryTimes === 0) {
-        await jackPot.logAndSendMail(`${name} exception`, e, isSend);
+      if (leftTime === 0) {
+        await jackPot.logAndSendMail(`${name} exception`, `tried ${tryTimes} still failed, ${e}`);
         return;
       }
       log.error(`${name} exception : ${e}` );
