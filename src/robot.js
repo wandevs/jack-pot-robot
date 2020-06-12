@@ -76,7 +76,7 @@ const robotSchedules = ()=>{
   // });
 
   // daily check if a validator want to exit, send a email, and delegateOut
-  schedule.scheduleJob('0 40 * * * *', async () => {
+  schedule.scheduleJob('0 */10 * * * *', async () => {
     await doSchedule('checkStakerOut');
   });
 
@@ -87,4 +87,4 @@ setTimeout(async () => {
   await jackPot.logAndSendMail("mainnet Jack's Pot robot start", `robot start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
 }, 0);
 
-// robotSchedules();
+robotSchedules();

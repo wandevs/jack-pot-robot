@@ -5,15 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run lint",
-    
     "robot_local": "node -r dotenv/config src/robot.js dotenv_config_path=.env.local",
     "robot_testnet": "node -r dotenv/config src/robot.js dotenv_config_path=.env.testnet",
     "robot_mainnet": "node -r dotenv/config src/robot.js dotenv_config_path=.env.mainnet",
-
     "check_local": "node -r dotenv/config src/check.js dotenv_config_path=.env.local",
     "check_testnet": "node -r dotenv/config src/check.js dotenv_config_path=.env.testnet",
     "check_mainnet": "node -r dotenv/config src/check.js dotenv_config_path=.env.mainnet",
-
     "lint": "eslint ./src",
     "test": "nyc mocha --recursive",
     "test_db": "node -r dotenv/config node_modules/.bin/_mocha ./test/db_test.js dotenv_config_path=.env.local",
