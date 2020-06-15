@@ -2,7 +2,6 @@ const log = require('./lib/log');
 const jackPot = require('./lib/jack-pot');
 const wanChain = require(`./lib/${process.env.CHAIN_ENGINE}`).wanChain;
 const web3 = require(`./lib/${process.env.CHAIN_ENGINE}`).web3;
-const web3_ws = require(`./lib/${process.env.CHAIN_ENGINE}`).web3_ws;
 const path = require('path');
 const fs = require('fs');
 const db = require('./lib/sqlite_db');

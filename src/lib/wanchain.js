@@ -10,7 +10,6 @@ const { promisify, sleep } = require("./utils");
 class WanChain {
   constructor() {
     this.web3 = new Web3(new Web3.providers.HttpProvider(process.env.RPC_URL));
-    this.web3_ws = new Web3(new Web3.providers.WebsocketProvider(process.env.WS_URL));
     this.web3.pos = new (require('./wanchain-pos'))(this.web3);
   }
 
@@ -126,5 +125,4 @@ const wanChain = new WanChain();
 module.exports = {
   wanChain,
   web3: wanChain.web3,
-  web3_ws: wanChain.web3_ws,
 };
