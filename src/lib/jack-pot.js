@@ -25,16 +25,26 @@ class JackPot {
         this.zeroAmount = web3.utils.toBN(0);
     }
 
-  async logAndSendMail(subject, content, isSend = true) {
-    log.error(subject + " : " + content);
-    try {
-      if (isSend) {
-        await sendMail(subject, content);
-      }
-    } catch (e) {
-      log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+    async logAndSendMail(subject, content, isSend = true) {
+        log.error(subject + " : " + content);
+        try {
+        if (isSend) {
+            await sendMail(subject, content);
+        }
+        } catch (e) {
+        log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+        }
     }
-  }
+    async logAndSendCheckMail(subject, content, isSend = true) {
+      log.error(subject + " : " + content);
+      try {
+        if (isSend) {
+          await sendMail(subject, content, process.env.EMAIL_FROM_NAME_CHECK);
+        }
+      } catch (e) {
+        log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+      }
+    }
     //////////
     // robot operator
     async doOperator(opName, data, gasLimit, value, count = 7, privateKey = process.env.JACKPOT_OPERATOR_PVKEY, address = process.env.JACKPOT_OPERATOR_ADDRESS) {

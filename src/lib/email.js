@@ -35,9 +35,9 @@ const mailOptions = {
 };
 
 // send mail with defined transport object
-const sendMail = async (subject, content) => {
+const sendMail = async (subject, content, from = process.env.EMAIL_FROM_NAME) => {
     const mailOptions = {
-        from: process.env.EMAIL_FROM_NAME, // sender address
+        from: from, // sender address
         to: process.env.EMAIL_TO_NAME, // list of receivers
         subject: subject,
         html: `<b>${content}</b>`

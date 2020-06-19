@@ -41,6 +41,11 @@ class WanChain {
     return await this.web3.eth.getBalance(addr);
   };
 
+  // iWan don't have this interface
+  async getBalanceByBlockNumber(addr, blockNumber) {
+    return await this.web3.eth.getBalance(addr, blockNumber);
+  };
+
   async getScVar(name, contract, abi) {
     return await contract.methods[name]().call();
   }
@@ -80,15 +85,20 @@ class WanChain {
 
     // scan all jackpot txs
     const receiptsPromise = [];
-    blocks.forEach((block) => {
-      if (block.transactions) {
-        block.transactions.forEach(tx => {
-          if (tx.to !== null && address === tx.to.toLowerCase()) {
-            receiptsPromise.push(new promisify(this.web3.eth.getTransactionReceipt, [tx.hash], this.web3.eth));
+    if (blocks) {
+      blocks.forEach((block) => {
+        if (block.transactions) {
+          if (!block.transactions) {
+            console.log("transactions null")
           }
-        })
-      }
-    })
+          block.transactions.forEach(tx => {
+            if (tx.to !== null && address === tx.to.toLowerCase()) {
+              receiptsPromise.push(new promisify(this.web3.eth.getTransactionReceipt, [tx.hash], this.web3.eth));
+            }
+          })
+        }
+      })
+    }
     const receipts = await Promise.all(receiptsPromise);
     if (receipts.length > 1) {
       receipts.sort((a, b) => {

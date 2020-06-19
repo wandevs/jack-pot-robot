@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('./lib/sqlite_db');
 const { sleep } = require('./lib/utils');
+const wanchain = require('./lib/wanchain');
 
 async function checkBalance() {
   // emit FeeSend(owner(), feeAmount)
@@ -107,7 +108,7 @@ function prizeWithdraw(log) {
 }
 
 // event UpdateSuccess();
-function updateSuccess(log) {
+async function updateSuccess(log) {
   // console.log(JSON.stringify(log.returnValues));
   // TODO: check "prizePool + delegatePool + demandDepositPool  =   balance" in db, but can't get delta amount of pools
 }
@@ -299,7 +300,7 @@ function parseReceipt(receipts, next) {
               handlers[log.raw.topics[0]](logObj);
             }
           } catch (e) {
-            jackPot.logAndSendMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
+            jackPot.logAndSendCheckMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
           }
         }
       });
@@ -314,25 +315,32 @@ function parseReceipt(receipts, next) {
 }
 
 let bScanning = false;
-async function doScan(from, step, to) {
+async function doScan(from, step, to, balance) {
   let next = from + step;
   if (next > to) {
     next = to;
   }
+  log.info(`begin scan from=${from}, to=${next}`);
 
   const receipts = await scanTx(from, next);
   const transaction = db.db.transaction(parseReceipt);
   const failedTxs = transaction(receipts, next);
 
   if (failedTxs.length > 0) {
-    await jackPot.logAndSendMail("find wrong txs", JSON.stringify(failedTxs, null, 2));
+    await jackPot.logAndSendCheckMail("find wrong txs", JSON.stringify(failedTxs, null, 2));
   }
 
   if (next < to) {
     setTimeout( async () => {
-      await doScan(next + 1, step, to); 
+      await doScan(next + 1, step, to, balance); 
     }, 0);
   } else {
+    // check contract address balance === db.balance
+    const jackPotBalance = web3.utils.toBN(balance);
+    const dbBalance = web3.utils.toBN(db.getUser(process.env.JACKPOT_ADDRESS).balance);
+    if (jackPotBalance.cmp(dbBalance) < 0) {
+      await jackPot.logAndSendCheckMail("jackPotBalance error", `to=${to}, contract balance = ${web3.utils.fromWei(jackPotBalance)}, db balance = ${web3.utils.fromWei(dbBalance)}`);
+    }
     bScanning = false;
   }
 }
@@ -360,13 +368,7 @@ async function scanAndCheck() {
   // const to = 54719;
 
   log.info(`scanAndCheck from=${from},to=${to}`);
-  await doScan(from, step, to);
-  // check contract address balance === db.balance
-  const jackPotBalance = web3.utils.toBN(balance);
-  const dbBalance = web3.utils.toBN(db.getUser(process.env.JACKPOT_ADDRESS).balance);
-  if (jackPotBalance.cmp(dbBalance) < 0) {
-    await jackPot.logAndSendMail("jackPotBalance error", `from=${from}, to=${to}, contract balance = ${web3.utils.fromWei(jackPotBalance)}, db balance = ${web3.utils.fromWei(dbBalance)}`);
-  }
+  await doScan(from, step, to, balance);
 }
 
 function init() {
@@ -385,5 +387,5 @@ setInterval(() => {
 }, parseInt(process.env.CHECK_INTERVAL));
 
 process.on('unhandledRejection', (err) => {
-  jackPot.logAndSendMail('unhandled exception', `${err}`);
+  jackPot.logAndSendCheckMail('unhandled exception', `${err}`);
 });

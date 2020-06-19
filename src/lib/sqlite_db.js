@@ -13,6 +13,9 @@ class DB {
   }
 
   init(filePath) {
+    if (!fs.existsSync(path.resolve(__dirname, "../../db"))) {
+      fs.mkdirSync(path.resolve(__dirname, "../../db"));
+    }
     if (!filePath) {
       filePath = path.resolve(__dirname, "../../db/robot.db")
     }
