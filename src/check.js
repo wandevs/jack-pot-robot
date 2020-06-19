@@ -365,6 +365,9 @@ async function scanAndCheck() {
   const step = parseInt(process.env.SCAN_STEP)
   const {blockNumber, balance} = await getBalanceAndBlockNumber();
   const to = blockNumber;
+  if (from > to) {
+    return;
+  }
   // const to = 54719;
 
   log.info(`scanAndCheck from=${from},to=${to}`);
