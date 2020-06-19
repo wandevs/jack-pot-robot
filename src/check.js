@@ -380,7 +380,7 @@ function init() {
 
 const startTime = new Date();
 setTimeout(async () => {
-  await jackPot.logAndSendMail("mainnet Jack's Pot Checker start", `Checker start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
+  await jackPot.logAndSendCheckMail("mainnet Jack's Pot Checker start", `Checker start at local = ${startTime.toLocaleString()}, utc = ${startTime.toUTCString()}` );
 }, 0);
 
 init();
