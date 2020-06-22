@@ -342,7 +342,6 @@ async function doScan(from, step, to, balance) {
       await jackPot.logAndSendCheckMail("jackPotBalance error", `to=${to}, contract balance = ${web3.utils.fromWei(jackPotBalance)}, db balance = ${web3.utils.fromWei(dbBalance)}`);
     }
     bScanning = false;
-    log.info(`set scanning = false`);
   }
 }
 
@@ -368,7 +367,6 @@ async function scanAndCheck() {
   const to = blockNumber;
   if (from > to) {
     bScanning = false;
-    log.info(`set scanning = false`);
     return;
   }
   // const to = 54719;
@@ -391,7 +389,6 @@ init();
 setInterval(() => {
   if (!bScanning) {
     bScanning = true;
-    log.info(`set scanning = true`);
     setTimeout(async () => {
       await scanAndCheck();
     }, 0);
