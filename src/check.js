@@ -391,6 +391,8 @@ setInterval(() => {
     setTimeout(async () => {
       await scanAndCheck();
     }, 0);
+  } else {
+    log.info(`scanning = ${bScanning}`);
   }
 }, parseInt(process.env.CHECK_INTERVAL));
 
