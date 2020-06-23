@@ -386,11 +386,26 @@ setTimeout(async () => {
 
 init();
 
+let lastException = null;
 setInterval(() => {
   if (!bScanning) {
     bScanning = true;
     setTimeout(async () => {
-      await scanAndCheck();
+      try {
+        await scanAndCheck();
+      } catch (e) {
+        let reason = "";
+        if (typeof(e) === "string") {
+          reason = e;
+        } else {
+          reason = JSON.stringify(e);
+        }
+        if (lastException !== reason) {
+          lastException = reason;
+          await jackPot.logAndSendCheckMail("scanAndCheck exception", lastException);
+        }
+        bScanning = false;
+      }
     }, 0);
   } else {
     log.info(`scanning = ${bScanning}`);
