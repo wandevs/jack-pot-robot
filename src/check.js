@@ -414,4 +414,5 @@ setInterval(() => {
 
 process.on('unhandledRejection', (err) => {
   jackPot.logAndSendCheckMail('unhandled exception', `${err}`);
+  bScanning = false;
 });
