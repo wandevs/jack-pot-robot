@@ -315,6 +315,7 @@ function parseReceipt(receipts, next) {
 }
 
 let bScanning = false;
+let lastException = null;
 async function doScan(from, step, to, balance) {
   let next = from + step;
   if (next > to) {
@@ -341,6 +342,7 @@ async function doScan(from, step, to, balance) {
     if (jackPotBalance.cmp(dbBalance) < 0) {
       await jackPot.logAndSendCheckMail("jackPotBalance error", `to=${to}, contract balance = ${web3.utils.fromWei(jackPotBalance)}, db balance = ${web3.utils.fromWei(dbBalance)}`);
     }
+    lastException = null;
     bScanning = false;
   }
 }
@@ -386,7 +388,6 @@ setTimeout(async () => {
 
 init();
 
-let lastException = null;
 setInterval(() => {
   if (!bScanning) {
     bScanning = true;
