@@ -118,7 +118,7 @@ describe("sqlite3 test", function () {
     db.selectAll();
   })
 
-  it.only('insert', function() {
+  it('insert', function() {
     db.insertScan({blockNumber: 333});
     const a = db.getScan();
     assert.equal(a.blockNumber, 333)
@@ -130,7 +130,7 @@ describe("sqlite3 test", function () {
     assert.equal(b.blockNumber, 111);
   })
 
-  it.only('tx batch update', function() {
+  it('tx batch update', function() {
     const tx = db.wrapTransaction(function() {
       db.updateScan({blockNumber: 111});
       let s1 = db.getScan();
@@ -143,6 +143,19 @@ describe("sqlite3 test", function () {
       assert.equal(s3.blockNumber, 333);
     });
     tx();
+  })
+
+  it.only('insert balance change', function() {
+    db.insertBalanceChange({
+      transactionHash:"0x066281ca869c2c37a1c8874d822629495d4cfc362006bd945f292980e6be4b7a",
+      blockNumber: 295316,
+      event: "buy",
+      amount: "0x100",
+      from: "0x2d0e7c0813a51d3bd1d08246af2a8a7a57d8922e",
+      fromBalance: "0x101",
+      to: "0x3d0e7c0813a51d3bd1d08246af2a8a7a57d8922e",
+      toBalance: "0x102",
+    })
   })
 });
 

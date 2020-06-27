@@ -20,6 +20,14 @@ class DB {
       filePath = path.resolve(__dirname, "../../db/robot.db")
     }
 
+    // create table winner(
+    //   id integer PRIMARY KEY,
+    //   transactionHash char(66),
+    //   blockNumber integer not null,
+    //   winner char(42),
+    //   amount char(82),
+    //   isWithdraw boolean
+    // );
     let db = null;
     if (!fs.existsSync(filePath)) {
       // db = new Sqlite3(filePath, {verbose: console.log});
@@ -33,6 +41,18 @@ class DB {
           status boolean,
           "to" char(42),
           transactionIndex integer
+        );
+
+        create table balance_change (
+          id integer PRIMARY KEY,
+          transactionHash char(66),
+          blockNumber integer not null,
+          event char(40),
+          amount char(82),
+          "from" char(42),
+          fromBalance char(82),
+          "to" char(42),
+          toBalance char(82)
         );
 
         create table blocks (
@@ -70,6 +90,9 @@ class DB {
       status = receipt.status === '0x1';
     }
     insert.run(receipt, status ? 1 : 0);
+  }
+  insertBalanceChange(balanceChange) {
+    return this.db.prepare(`insert into balance_change values (null,@transactionHash, @blockNumber,@event,@amount,@from,@fromBalance,@to,@toBalance)`).run(balanceChange);
   }
 
   getUser(address) {

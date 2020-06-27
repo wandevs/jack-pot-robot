@@ -61,24 +61,47 @@ function updateUserBalance(bAdd, amount, user, userAddress) {
     db.updateUser(user);
   } else {
     if (bAdd) {
-      db.insertUser({address: userAddress.toLowerCase(), balance: amount});
+      const newUser = {address: userAddress.toLowerCase(), balance: amount}
+      db.insertUser(newUser);
+      return newUser;
     } else {
       throw `user: ${userAddress} balance not enough`;
     }
   }
+  return user;
 }
 
 function updateContractBalance(bAdd, amount) {
   const contractUser = db.getUser(process.env.JACKPOT_ADDRESS);
   updateUserBalance(bAdd, amount, contractUser, process.env.JACKPOT_ADDRESS);
+  return contractUser;
+}
+
+function saveEvent(transactionHash, blockNumber, event, amount, from, fromBalance, to, toBalance) {
+  try {
+    db.insertBalanceChange({
+      transactionHash: transactionHash,
+      blockNumber: blockNumber,
+      event: event,
+      amount: web3.utils.fromWei(amount),
+      from: from.toLowerCase(),
+      fromBalance: web3.utils.fromWei(fromBalance),
+      to: to.toLowerCase(),
+      toBalance: web3.utils.fromWei(toBalance),
+    });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 // event Buy( address indexed user, uint256 stakeAmount, uint256[] codes, uint256[] amounts );
 function buy(log) {
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
-  updateUserBalance(true, obj.stakeAmount, user, obj.user);
-  updateContractBalance(true, obj.stakeAmount);
+  const tUser = updateUserBalance(true, obj.stakeAmount, user, obj.user);
+  const cUser = updateContractBalance(true, obj.stakeAmount);
+  saveEvent(log.transactionHash, log.blockNumber, "Buy", obj.stakeAmount, 
+    obj.user, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }
 
 // event Redeem(address indexed user, bool indexed success, uint256[] codes, uint256 amount);
@@ -86,8 +109,10 @@ function redeem(log) {
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   if (obj.success) {
-    updateUserBalance(false, obj.amount, user, obj.user);
-    updateContractBalance(false, obj.amount);
+    const tUser = updateUserBalance(false, obj.amount, user, obj.user);
+    const cUser = updateContractBalance(false, obj.amount);
+    saveEvent(log.transactionHash, log.blockNumber, "Redeem", obj.amount, 
+      obj.user, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
   }
 }
 
@@ -102,8 +127,10 @@ function prizeWithdraw(log) {
   const obj = log.returnValues;
   const user = db.getUser(obj.user);
   if (obj.success) {
-    updateUserBalance(false, obj.amount, user, obj.user);
-    updateContractBalance(false, obj.amount);
+    const tUser = updateUserBalance(false, obj.amount, user, obj.user);
+    const cUser = updateContractBalance(false, obj.amount);
+    saveEvent(log.transactionHash, log.blockNumber, "PrizeWithdraw", obj.amount, 
+      obj.user, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
   }
 }
 
@@ -118,8 +145,10 @@ function subsidyRefund(log) {
   // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.refundAddress);
-  updateUserBalance(false, obj.amount, user, obj.refundAddress);
-  updateContractBalance(false, obj.amount);
+  const tUser = updateUserBalance(false, obj.amount, user, obj.refundAddress);
+  const cUser = updateContractBalance(false, obj.amount);
+  saveEvent(log.transactionHash, log.blockNumber, "SubsidyRefund", obj.amount, 
+    obj.refundAddress, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }
 
 // event RandomGenerate(uint256 indexed epochID, uint256 random);
@@ -130,6 +159,15 @@ function randomGenerate(log) {
 // event LotteryResult(uint256 indexed epochID, uint256 winnerCode, uint256 prizePool, address[] winners, uint256[] amounts);
 function lotteryResult(log) {
   // console.log(JSON.stringify(log.returnValues));
+  const obj = log.returnValues;
+  for(let i = 0; i < obj.winners.length; i++) {
+    if (web3.utils.toBN(obj.amounts[i]).toNumber() !== 0) {
+      const user = db.getUser(obj.winners[i]);
+      updateUserBalance(true, obj.amounts[i], user, user.address);
+      saveEvent(log.transactionHash, log.blockNumber, "LotteryResult", obj.amounts[i], 
+        obj.winners[i], obj.amounts[i], "", "");
+    }
+  }
 }
 
 // event FeeSend(address indexed owner, uint256 indexed amount);
@@ -137,9 +175,10 @@ function feeSend(log) {
   // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.owner);
-  updateUserBalance(true, obj.amount, user, obj.owner);
-  updateContractBalance(false, obj.amount);
-
+  const tUser = updateUserBalance(true, obj.amount, user, obj.owner);
+  const cUser = updateContractBalance(false, obj.amount);
+  saveEvent(log.transactionHash, log.blockNumber, "FeeSend", obj.amount, 
+    obj.owner, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }
 
 // event DelegateOut(address indexed validator, uint256 amount);
@@ -147,8 +186,10 @@ function delegateOut(log) {
   // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
-  updateUserBalance(false, obj.amount, user, obj.validator);
-  updateContractBalance(true, obj.amount);
+  const tUser = updateUserBalance(false, obj.amount, user, obj.validator);
+  const cUser = updateContractBalance(true, obj.amount);
+  saveEvent(log.transactionHash, log.blockNumber, "DelegateOut", obj.amount, 
+    obj.validator, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }
 
 // event delegateIn(address indexed sender, address indexed posAddress, uint indexed v)
@@ -157,8 +198,10 @@ function delegateIn(log) {
   // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
-  updateUserBalance(true, obj.amount, user, obj.validator);
-  updateContractBalance(false, obj.amount);
+  const tUser = updateUserBalance(true, obj.amount, user, obj.validator);
+  const cUser = updateContractBalance(false, obj.amount);
+  saveEvent(log.transactionHash, log.blockNumber, "DelegateIn", obj.amount, 
+    obj.validator, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }
 
 // event SubsidyIn(address indexed sender, uint256 amount);
@@ -166,8 +209,10 @@ function subsidyIn(log) {
   // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   const user = db.getUser(obj.sender);
-  updateUserBalance(true, obj.amount, user, obj.sender);
-  updateContractBalance(true, obj.amount);
+  const tUser = updateUserBalance(true, obj.amount, user, obj.sender);
+  const cUser = updateContractBalance(true, obj.amount);
+  saveEvent(log.transactionHash, log.blockNumber, "SubsidyIn", obj.amount, 
+    obj.sender, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }
 
 function ownershipTransferred(log) {
@@ -203,75 +248,6 @@ handlers[upgradedEvent] = upgraded;
 handlers[posDelegateOutEvent] = posDelegateOut;
 handlers[posDelegateInEvent] = posDelegateIn;
 
-// for (it in handlers) {
-//   console.log("it = " + it);
-// }
-// `
-// it = 0xf92806ed4b288c6cb9d35fccadbc6023b411ff69030ae055ecf9785b18165324
-// it = 0x02768cf47bd502ac2b9739723150cb77b0a98950fd067287c0a65d912149a9cb
-// it = 0x71238424bca4bc92d1155a651ad499bf349a54a66afd80751c17cab24c3cf895
-// it = 0x8a234cda743a9f7572dc9b0b6fb2ffebf42374bb768164a04c446483579abc65
-// it = 0xe0828ebc681453a239bd3a107defe316328dc7d2aec54a5d772da80fc136ce16
-// it = 0xf6a1f17846607f903615c8feba44ef2affda4abfe37aed75d2ada327cfd2bdb2
-// it = 0xd5610194069263ad05a235464e87dbb01883927cb85d14217be94e54e2458511
-// it = 0x7d15b902c9eb1ca6750ef6c45ce33fbff1d99b2c1c3f5de8229a2bacd27aa184
-// it = 0x30d7c727010bd07760adc4a97df25f841b278de6b8ce98061eae479bf21273f8
-// it = 0xa38c0de852a2fafa244b1ae0dd0a953a4c002d7b54cde932d9965d9b2d390e2d
-// it = 0x4e3aa93ab6e2e42feec798732c048a9d1e2fd6dbde19547e3ed903b3b0fea17e
-// it = 0xff1173e2426cd768da9dd8d89f7c1d32edd76f900de72ac722cd759f5a6c5185
-// it = 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0
-// it = 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b
-// it = 0xc56651e869741bd9650fdd984421326186e27584c2db5f5c08925631f320a39d
-// it = 0x415d10a111ef0522e5fedeec53cfc4eece3854ba6e1efdf147d5c5f6e624c1a2
-// `
-
-// web3--1.20, new interface,   gwan need open --ws --wsport 8546 --wsorigins "*"
-// async function eventFilter() {
-//   const options = {
-//     fromBlock: 27000, 
-//     toBlock: 'latest', 
-//     address: process.env.JACKPOT_ADDRESS, 
-//     // topics: [buyEvent, "0x0000000000000000000000004db93be4e7e1bd5065ef49bf893e79301d9ee476"]
-//   }
-// 
-//   const subscription = web3_ws.eth.subscribe('logs', options, (error, result) => {
-//     if (error) {
-//       console.log("error:" + error);
-//     } else {
-//       console.log(JSON.stringify(result));
-//     }
-//   })
-//   .on("data", function(log){
-//     console.log("data:" + JSON.stringify(log));
-//   })
-//   .on("changed", function(log){
-//     console.log("changed:" + log);
-//   });
-// }
-
-// web3--1.20, new interface
-// async function getPastEvents() {
-//   const options = {
-//     fromBlock: 279773, 
-//     toBlock: 279773, 
-//     address: process.env.JACKPOT_ADDRESS, 
-//   }
-//
-//   jackPot.contract
-//   const subscription = jackPot.contract.getPastEvents('allEvents', options, (error, results) => {
-//     if (error) {
-//       console.log("error:" + error);
-//     } else {
-//       console.log(JSON.stringify(result, null, 2));
-//       results.forEach(result => {
-//         result.returnValues.amounts.forEach(amount => {
-// 
-//         })
-//       })
-//     }
-//   })
-// }
-
 // scan between [from, to]
 async function scanTx(from, to) {
   const receipts = await wanChain.getTxsBetween(process.env.JACKPOT_ADDRESS, from, to);
@@ -301,7 +277,7 @@ function parseReceipt(receipts, next) {
             }
           } catch (e) {
             jackPot.logAndSendCheckMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
-          }
+          } 
         }
       });
     } else {
