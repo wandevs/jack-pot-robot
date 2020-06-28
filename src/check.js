@@ -78,20 +78,16 @@ function updateContractBalance(bAdd, amount) {
 }
 
 function saveEvent(transactionHash, blockNumber, event, amount, from, fromBalance, to, toBalance) {
-  try {
-    db.insertBalanceChange({
-      transactionHash: transactionHash,
-      blockNumber: blockNumber,
-      event: event,
-      amount: web3.utils.fromWei(amount),
-      from: from.toLowerCase(),
-      fromBalance: web3.utils.fromWei(fromBalance),
-      to: to.toLowerCase(),
-      toBalance: web3.utils.fromWei(toBalance),
-    });
-  } catch (e) {
-    console.log(e);
-  }
+  db.insertBalanceChange({
+    transactionHash: transactionHash,
+    blockNumber: blockNumber,
+    event: event,
+    amount: web3.utils.fromWei(amount),
+    from: from.toLowerCase(),
+    fromBalance: web3.utils.fromWei(fromBalance),
+    to: to.toLowerCase(),
+    toBalance: web3.utils.fromWei(toBalance),
+  });
 }
 
 // event Buy( address indexed user, uint256 stakeAmount, uint256[] codes, uint256[] amounts );
