@@ -28,11 +28,11 @@ class JackPot {
     async logAndSendMail(subject, content, isSend = true) {
         log.error(subject + " : " + content);
         try {
-        if (isSend) {
-            await sendMail(subject, content);
-        }
+            if (isSend) {
+                await sendMail(subject, content);
+            }
         } catch (e) {
-        log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+            log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e instanceof Error ? e.stack : e}`);
         }
     }
     async logAndSendCheckMail(subject, content, isSend = true) {
@@ -42,7 +42,7 @@ class JackPot {
           await sendMail(subject, content, process.env.EMAIL_FROM_NAME_CHECK);
         }
       } catch (e) {
-        log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+        log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e instanceof Error ? e.stack : e}`);
       }
     }
     //////////
@@ -64,7 +64,7 @@ class JackPot {
         if (!receipt) {
             const content = `${opName} failed to get receipt, tx=${txHash} receipt, data: ${data}, nonce:${nonce}`;
             log.error(content);
-            throw content;
+            throw new Error(content);
         }
 
         log.debug(`${opName} receipt: ${JSON.stringify(receipt)}`);
@@ -162,8 +162,8 @@ class JackPot {
                             await this.runDelegateOut(validatorsAddrs[i]);
                             isDelegateOut = true;
                             await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out success`);
-                        } catch(err) {
-                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out failed : ${err}`);
+                        } catch(e) {
+                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out failed : ${e instanceof Error ? e.stack : e}`);
                         }
                     } else {
                         await this.logAndSendMail(subject, `${validatorsAddrs[i]} can't delegate out, ${validatorsInfo.withdrawFromValidator} is on delegating out`);

@@ -55,7 +55,7 @@ function updateUserBalance(bAdd, amount, user, userAddress) {
       if (oldBalance.cmp(deltaBalance) >= 0) {
         user.balance = oldBalance.sub(deltaBalance).toString(10)
       } else {
-        throw `user: ${JSON.stringify(user)} balance not enough`;
+        throw new Error(`user: ${JSON.stringify(user)} balance not enough`);
       }
     }
     db.updateUser(user);
@@ -65,7 +65,7 @@ function updateUserBalance(bAdd, amount, user, userAddress) {
       db.insertUser(newUser);
       return newUser;
     } else {
-      throw `user: ${userAddress} balance not enough`;
+      throw new Error(`user: ${userAddress} balance not enough`);
     }
   }
   return user;
@@ -272,7 +272,7 @@ function parseReceipt(receipts, next) {
               handlers[log.raw.topics[0]](logObj);
             }
           } catch (e) {
-            jackPot.logAndSendCheckMail("user balance wrong", `err = ${e}, receipt=${JSON.stringify(receipt, null, 2)}`);
+            jackPot.logAndSendCheckMail("user balance wrong", `err = ${e instanceof Error ? e.stack : e}, receipt=${JSON.stringify(receipt, null, 2)}`);
           } 
         }
       });
@@ -376,7 +376,7 @@ setInterval(() => {
         }
         if (lastException !== reason) {
           lastException = reason;
-          await jackPot.logAndSendCheckMail("scanAndCheck exception", lastException);
+          await jackPot.logAndSendCheckMail("scanAndCheck exception", e instanceof Error ? e.stack : e);
         }
         bScanning = false;
       }
