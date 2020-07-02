@@ -341,6 +341,7 @@ async function scanAndCheck() {
   const to = blockNumber;
   if (from > to) {
     bScanning = false;
+    log.warn(`scanAndCheck same block! ${to}`)
     return;
   }
   // const to = 54719;
