@@ -144,7 +144,7 @@ class JackPot {
     }
 
     //  if a validator want to exit, send a email, and delegateOut
-    async checkStakerOut () {
+    async checkStakerOut() {
         const validatorsInfo = await this.getValidatorsInfo();
         const validatorsAddrs = this.myValidators;
         const blockNumber = await wanChain.getBlockNumber();
