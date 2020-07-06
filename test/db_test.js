@@ -145,7 +145,7 @@ describe("sqlite3 test", function () {
     tx();
   })
 
-  it.only('insert balance change', function() {
+  it('insert balance change', function() {
     db.insertBalanceChange({
       transactionHash:"0x066281ca869c2c37a1c8874d822629495d4cfc362006bd945f292980e6be4b7a",
       blockNumber: 295316,

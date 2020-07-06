@@ -35,7 +35,7 @@ describe("iWan == wanChain test", function () {
     assert.strictEqual(a > 0, true, "balance should > 0");
     assert.strictEqual(a, b);
   });
-  it.only('getBalanceByBlockNumber', async function() {
+  it('getBalanceByBlockNumber', async function() {
     // await sleep(5000)
     console.log("getBalanceByBlockNumber...");
     const a = await wanChain.getBalanceByBlockNumber("0xa4626e2bb450204c4b34bcc7525e585e8f678c0d", 7800000);
