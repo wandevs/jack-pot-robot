@@ -8,6 +8,7 @@ const iWan = require("../src/lib/iwan").wanChain;
 const iWan_contract = new iWan.web3.eth.Contract(jpApi, process.env.JACKPOT_ADDRESS);
 const web3 = require("../src/lib/wanchain").web3;
 const wanHelper = require('../src/lib/wanchain-helper');
+const {sleep} = require("../src/lib/utils")
 
 before(function () {
   console.log("init jack-pot test");
@@ -33,6 +34,15 @@ describe("iWan == wanChain test", function () {
     const b = await iWan.getBalance("0xa4626e2bb450204c4b34bcc7525e585e8f678c0d");
     assert.strictEqual(a > 0, true, "balance should > 0");
     assert.strictEqual(a, b);
+  });
+  it('getBalanceByBlockNumber', async function() {
+    // await sleep(5000)
+    console.log("getBalanceByBlockNumber...");
+    const a = await wanChain.getBalanceByBlockNumber("0xa4626e2bb450204c4b34bcc7525e585e8f678c0d", 7800000);
+    // const b = await iWan.getBalance("0xa4626e2bb450204c4b34bcc7525e585e8f678c0d", 7800000);
+    // assert.strictEqual(a > 0, true, "balance should > 0");
+    // assert.strictEqual(a, b);
+    assert.strictEqual(a, "288470142661951688668");
   });
 
   it('getScVar', async function() {

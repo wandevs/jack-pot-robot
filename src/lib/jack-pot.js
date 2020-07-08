@@ -25,16 +25,26 @@ class JackPot {
         this.zeroAmount = web3.utils.toBN(0);
     }
 
-  async logAndSendMail(subject, content, isSend = true) {
-    log.error(subject + " : " + content);
-    try {
-      if (isSend) {
-        await sendMail(subject, content);
-      }
-    } catch (e) {
-      log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e}`);
+    async logAndSendMail(subject, content, isSend = true) {
+        log.error(subject + " : " + content);
+        try {
+            if (isSend) {
+                await sendMail(subject, content);
+            }
+        } catch (e) {
+            log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e instanceof Error ? e.stack : e}`);
+        }
     }
-  }
+    async logAndSendCheckMail(subject, content, isSend = true) {
+      log.error(subject + " : " + content);
+      try {
+        if (isSend) {
+          await sendMail(subject, content, process.env.EMAIL_FROM_NAME_CHECK);
+        }
+      } catch (e) {
+        log.error(`send mail failed, sub = ${subject}, content = ${content}, err=${e instanceof Error ? e.stack : e}`);
+      }
+    }
     //////////
     // robot operator
     async doOperator(opName, data, gasLimit, value, count = 7, privateKey = process.env.JACKPOT_OPERATOR_PVKEY, address = process.env.JACKPOT_OPERATOR_ADDRESS) {
@@ -54,7 +64,7 @@ class JackPot {
         if (!receipt) {
             const content = `${opName} failed to get receipt, tx=${txHash} receipt, data: ${data}, nonce:${nonce}`;
             log.error(content);
-            throw content;
+            throw new Error(content);
         }
 
         log.debug(`${opName} receipt: ${JSON.stringify(receipt)}`);
@@ -134,7 +144,7 @@ class JackPot {
     }
 
     //  if a validator want to exit, send a email, and delegateOut
-    async checkStakerOut () {
+    async checkStakerOut() {
         const validatorsInfo = await this.getValidatorsInfo();
         const validatorsAddrs = this.myValidators;
         const blockNumber = await wanChain.getBlockNumber();
@@ -152,8 +162,8 @@ class JackPot {
                             await this.runDelegateOut(validatorsAddrs[i]);
                             isDelegateOut = true;
                             await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out success`);
-                        } catch(err) {
-                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out failed : ${err}`);
+                        } catch(e) {
+                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out failed : ${e instanceof Error ? e.stack : e}`);
                         }
                     } else {
                         await this.logAndSendMail(subject, `${validatorsAddrs[i]} can't delegate out, ${validatorsInfo.withdrawFromValidator} is on delegating out`);

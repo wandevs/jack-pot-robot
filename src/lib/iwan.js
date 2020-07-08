@@ -47,7 +47,13 @@ class IWan {
       }
       return rt;
     } else {
-      return result;
+      const method = contract.methods[name]();
+      const rtType = method._method.outputs[0].type;
+      if (rtType === "uint256" || rtType === "uint") {
+        return new BigNumber(result).toString(10)
+      } else {
+        return result;
+      }
     }
   }
   async getScVar(name, contract, abi) {
@@ -78,7 +84,10 @@ class IWan {
 
   closeEngine() {
     if (!this.apiClient.isClosing() && !this.apiClient.isClosed()) {
-      return this.apiClient.close();
+      if (this.apiClient.isOpen()) {
+        return this.apiClient.close();
+      }
+      // return this.apiClient.close();
     }
   }
 
@@ -93,11 +102,14 @@ class IWan {
   async getTxsBetween(address, fromBlock, toBlock) {
     const txs = await this.apiClient.getTransByAddressBetweenBlocks(process.env.IWAN_CHAINTYPE, address, fromBlock, toBlock);
     const receiptsPromise = [];
-    txs.forEach(tx => {
-      if (address === tx.to.toLowerCase()) {
-        receiptsPromise.push(new promisify(this.apiClient.getTransactionReceipt, [process.env.IWAN_CHAINTYPE, tx.hash], this.apiClient));
-      }
-    })
+    if (txs) {
+      txs.forEach(tx => {
+        if (address === tx.to.toLowerCase()) {
+          receiptsPromise.push(new promisify(this.apiClient.getTransactionReceipt, [process.env.IWAN_CHAINTYPE, tx.hash], this.apiClient));
+        }
+      })
+    }
+
     const receipts = await Promise.all(receiptsPromise);
     if (receipts.length > 1) {
       receipts.sort((a, b) => {

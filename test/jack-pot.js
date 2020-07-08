@@ -225,15 +225,3 @@ async function getPendingRedeemSearchMap(userInfo, blockNumber) {
 	}
 	return codes;
 }
-
-setTimeout(async () => {
-	const mc = await maxCount();
-	const pendingRedeemStartIndex_data = await pendingRedeemStartIndex();
-	const pendingRedeemCount_data = await pendingRedeemCount();
-	const userInfo = await getUserInfo("0x8096e96c82ce1ae7365e1ab3f6410f4c73871a81");
-	const codes = await getPendingRedeemMap(web3.utils.toBN(pendingRedeemStartIndex_data).toNumber(), web3.utils.toBN(pendingRedeemCount_data).toNumber(), userInfo.address);
-	const codesStatus = await getPendingRedeemSearchMap(userInfo);
-	const codeInfo = await getIndexCodeMap(9208);
-	// await printSM(0, 45);
-
-}, 0);
