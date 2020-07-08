@@ -47,7 +47,13 @@ class IWan {
       }
       return rt;
     } else {
-      return result;
+      const method = contract.methods[name]();
+      const rtType = method._method.outputs[0].type;
+      if (rtType === "uint256" || rtType === "uint") {
+        return new BigNumber(result).toString(10)
+      } else {
+        return result;
+      }
     }
   }
   async getScVar(name, contract, abi) {
