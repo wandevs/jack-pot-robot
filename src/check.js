@@ -157,9 +157,11 @@ function lotteryResult(log) {
   // console.log(JSON.stringify(log.returnValues));
   const obj = log.returnValues;
   for(let i = 0; i < obj.winners.length; i++) {
-    if (web3.utils.toBN(obj.amounts[i]).toNumber() !== 0) {
+    if (obj.amounts[i] !== '0') {
+
       const user = db.getUser(obj.winners[i]);
       updateUserBalance(true, obj.amounts[i], user, user.address);
+      updateContractBalance(true, obj.amounts[i]);
       saveEvent(log.transactionHash, log.blockNumber, "LotteryResult", obj.amounts[i], 
         obj.winners[i], obj.amounts[i], "", "");
     }
@@ -380,7 +382,7 @@ setInterval(() => {
         }
         bScanning = false;
       }
-    }, 0);
+    }, parseInt(process.env.SCAN_DELAY));
   } else {
     log.info(`scanning = ${bScanning}`);
   }
