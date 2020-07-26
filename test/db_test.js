@@ -131,7 +131,7 @@ describe("sqlite3 test", function () {
   })
 
   it('tx batch update', function() {
-    const tx = db.wrapTransaction(function() {
+    const tx = db.db.transaction(function() {
       db.updateScan({blockNumber: 111});
       let s1 = db.getScan();
       assert.equal(s1.blockNumber, 111);
@@ -155,6 +155,30 @@ describe("sqlite3 test", function () {
       fromBalance: "0x101",
       to: "0x3d0e7c0813a51d3bd1d08246af2a8a7a57d8922e",
       toBalance: "0x102",
+    })
+  })
+
+  it('insert delegating_out', function() {
+    db.insertDelegatingOut({
+      balance: "0x101",
+      createTime: 323
+    })
+    db.insertDelegatingOut({
+      balance: "0x201",
+      createTime: 223
+    })
+    const delegatingOut = db.getOldestDelegatingOut();
+    console.log(JSON.stringify(delegatingOut));
+  })
+
+  it('delete delegating_out', function() {
+    db.deleteDelegatingOut(1)
+  })
+
+  it('insert delegated_out', function() {
+    db.insertDelegatedOut({
+      balance: "0x101",
+      createTime: 123
     })
   })
 });

@@ -44,6 +44,16 @@ const posDelegateInEvent = web3.utils.keccak256('delegateIn(address,address,uint
 // event delegateOut(address indexed sender, address indexed posAddress)
 const posDelegateOutEvent = web3.utils.keccak256('delegateOut(address,address)');
 
+function tryGetDelegateingOut(userObj) {
+  const out = db.getOldestDelegatingOut();
+  if (out) {
+    userObj.balance = userObj.balance.add(web3.utils.toBN(out.balance));
+    db.insertDelegatedOut(out);
+    db.deleteDelegatingOut(out.id);
+    return true;
+  }
+  return false;
+}
 // update
 function updateUserBalance(bAdd, amount, user, userAddress) {
   if (user) {
@@ -55,6 +65,18 @@ function updateUserBalance(bAdd, amount, user, userAddress) {
       if (oldBalance.cmp(deltaBalance) >= 0) {
         user.balance = oldBalance.sub(deltaBalance).toString(10)
       } else {
+        // 如果是合约地址，不断从delegateOut中提款
+        if (userAddress === process.env.JACKPOT_ADDRESS) {
+          const userObj = { balance: oldBalance}
+          while (tryGetDelegateingOut(userObj)) {
+            if (userObj.balance.cmp(deltaBalance) >= 0) {
+              user.balance = userObj.balance.sub(deltaBalance).toString(10);
+              db.updateUser(user);
+              return user;
+            }
+          }
+        }
+
         throw new Error(`user: ${JSON.stringify(user)} balance not enough`);
       }
     }
@@ -75,6 +97,12 @@ function updateContractBalance(bAdd, amount) {
   const contractUser = db.getUser(process.env.JACKPOT_ADDRESS);
   updateUserBalance(bAdd, amount, contractUser, process.env.JACKPOT_ADDRESS);
   return contractUser;
+}
+function updateDelegatingOut(amount) {
+  db.insertDelegatingOut({
+    balance: web3.utils.toBN(amount).toString(10),
+    createTime: new Date().getTime(),
+  });
 }
 
 function saveEvent(transactionHash, blockNumber, event, amount, from, fromBalance, to, toBalance) {
@@ -163,7 +191,7 @@ function lotteryResult(log) {
       updateUserBalance(true, obj.amounts[i], user, user.address);
       updateContractBalance(true, obj.amounts[i]);
       saveEvent(log.transactionHash, log.blockNumber, "LotteryResult", obj.amounts[i], 
-        obj.winners[i], obj.amounts[i], "", "");
+        obj.winners[i], user.balance, "", "");
     }
   }
 }
@@ -185,7 +213,9 @@ function delegateOut(log) {
   const obj = log.returnValues;
   const user = db.getUser(obj.validator);
   const tUser = updateUserBalance(false, obj.amount, user, obj.validator);
-  const cUser = updateContractBalance(true, obj.amount);
+  // const cUser = updateContractBalance(true, obj.amount);
+  const cUser = db.getUser(process.env.JACKPOT_ADDRESS);
+  updateDelegatingOut(obj.amount);
   saveEvent(log.transactionHash, log.blockNumber, "DelegateOut", obj.amount, 
     obj.validator, tUser.balance, process.env.JACKPOT_ADDRESS, cUser.balance);
 }

@@ -65,6 +65,18 @@ class DB {
           balance char(82)
         );
 
+        create table delegating_out (
+          id integer primary key autoincrement,
+          balance char(82),
+          createTime integer
+        );
+
+        create table delegated_out (
+          id integer primary key autoincrement,
+          balance char(82),
+          createTime integer
+        );
+
         create table scan (
           blockNumber integer
         );
@@ -81,6 +93,24 @@ class DB {
       db = new Sqlite3(filePath);
     }
     this.db = db;
+  }
+
+  insertDelegatingOut(delegatingOut) {
+    const insert = this.db.prepare(`insert into delegating_out (balance, createTime) values (@balance, @createTime)`);
+    insert.run(delegatingOut);
+  }
+  getOldestDelegatingOut() {
+    return this.db.prepare(`select * from delegating_out order by createTime`).get();
+  }
+
+  deleteDelegatingOut(id) {
+    const del = this.db.prepare(`delete from delegating_out where id = ?`);
+    del.run(id);
+  }
+
+  insertDelegatedOut(delegatedOut) {
+    const insert = this.db.prepare(`insert into delegated_out (balance, createTime) values (@balance, @createTime)`);
+    insert.run(delegatedOut);
   }
 
   insertReceipt(receipt) {
