@@ -214,7 +214,10 @@ class JackPot {
 
         const isDelegateOut = withdrawValidator !== "0x0000000000000000000000000000000000000000";
 
-        const pendingAmount = web3.utils.toBN(await this.getPendingAmount());
+        const pendingAmountString = await this.getPendingAmount();
+        console.log(`pendingAmount = ${pendingAmountString}`);
+
+        const pendingAmount = web3.utils.toBN(pendingAmountString);
 
         if (!isDelegateOut) {
             if (pendingAmount.cmp(this.zeroAmount) !== 0) {
@@ -245,17 +248,17 @@ class JackPot {
                     await this.runDelegateOut(outAddress);
                 }
                 return {isSetValidator: false, isDelegateOut: true};
-            } else {
-                const pendingRedeemCount = web3.utils.toBN(await wanChain.getScVar("pendingRedeemCount",this.contract, abiJackPot));
-                const pendingPrizeWithdrawCount = web3.utils.toBN(await wanChain.getScVar("pendingPrizeWithdrawCount", this.contract, abiJackPot));
-                if (pendingRedeemCount.cmp(this.zeroAmount) > 0 || pendingPrizeWithdrawCount.cmp(this.zeroAmount) > 0) {
-                    const out = validCandidates.find(v => {
-                        return v.amount.cmp(this.zeroAmount) > 0;
-                    });
+            // } else {
+            //     const pendingRedeemCount = web3.utils.toBN(await wanChain.getScVar("pendingRedeemCount",this.contract, abiJackPot));
+            //     const pendingPrizeWithdrawCount = web3.utils.toBN(await wanChain.getScVar("pendingPrizeWithdrawCount", this.contract, abiJackPot));
+            //     if (pendingRedeemCount.cmp(this.zeroAmount) > 0 || pendingPrizeWithdrawCount.cmp(this.zeroAmount) > 0) {
+            //         const out = validCandidates.find(v => {
+            //             return v.amount.cmp(this.zeroAmount) > 0;
+            //         });
                     
-                    await this.runDelegateOut(out.addr);
-                    return {isSetValidator: false, isDelegateOut: true};
-                }
+            //         await this.runDelegateOut(out.addr);
+            //         return {isSetValidator: false, isDelegateOut: true};
+            //     }
             }
         } else {
             return {isSetValidator: false, isDelegateOut: true};
