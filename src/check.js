@@ -408,7 +408,9 @@ setInterval(() => {
         }
         if (lastException !== reason) {
           lastException = reason;
-          await jackPot.logAndSendCheckMail("scanAndCheck exception", e instanceof Error ? e.stack : e);
+          if (reason !== 'Websocket closed') {
+            await jackPot.logAndSendCheckMail("scanAndCheck exception", e instanceof Error ? e.stack : e);
+          }
         }
         bScanning = false;
       }
