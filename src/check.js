@@ -367,18 +367,7 @@ async function getBalanceAndBlockNumber() {
 
 // if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
 async function scanAndCheck() {
-  const from = db.getScan().blockNumber + 1;
-  const step = parseInt(process.env.SCAN_STEP)
-  const {blockNumber, balance} = await getBalanceAndBlockNumber();
-  const to = blockNumber;
-  if (from > to) {
-    bScanning = false;
-    log.warn(`scanAndCheck same block! ${to}`)
-    return;
-  }
-  // const to = 54719;
 
-  log.info(`scanAndCheck from=${from},to=${to}`);
   await doScan(from, step, to, balance);
 }
 
@@ -393,28 +382,40 @@ setTimeout(async () => {
 
 init();
 
-setInterval(() => {
+setInterval(async () => {
   if (!bScanning) {
     bScanning = true;
-    setTimeout(async () => {
-      try {
-        await scanAndCheck();
-      } catch (e) {
-        let reason = "";
-        if (typeof(e) === "string") {
-          reason = e;
-        } else {
-          reason = JSON.stringify(e);
-        }
-        if (lastException !== reason) {
-          lastException = reason;
-          if (reason !== 'Websocket closed') {
-            await jackPot.logAndSendCheckMail("scanAndCheck exception", e instanceof Error ? e.stack : e);
-          }
-        }
+    try {
+      const from = db.getScan().blockNumber + 1;
+      const step = parseInt(process.env.SCAN_STEP)
+      const {blockNumber, balance} = await getBalanceAndBlockNumber();
+      const to = blockNumber;
+      if (from > to) {
         bScanning = false;
+        log.warn(`scanAndCheck same block! ${to}`)
+        return;
       }
-    }, parseInt(process.env.SCAN_DELAY));
+      // const to = 54719;
+    
+      log.info(`scanAndCheck from=${from},to=${to}`);
+      setTimeout(async () => {
+          await doScan(from, step, to, balance);
+      }, parseInt(process.env.SCAN_DELAY));
+    } catch (e) {
+      let reason = "";
+      if (typeof(e) === "string") {
+        reason = e;
+      } else {
+        reason = JSON.stringify(e);
+      }
+      if (lastException !== reason) {
+        lastException = reason;
+        if (reason !== 'Websocket closed') {
+          await jackPot.logAndSendCheckMail("scanAndCheck exception", e instanceof Error ? e.stack : e);
+        }
+      }
+      bScanning = false;
+    }
   } else {
     log.info(`scanning = ${bScanning}`);
   }
