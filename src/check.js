@@ -357,7 +357,8 @@ async function getBalanceAndBlockNumber() {
   while (true) {
     const blockNumberNew = await wanChain.getBlockNumber();
     if (blockNumber === blockNumberNew) {
-      return {blockNumber: blockNumber, balance: balance}
+      const block = await wanChain.getBlock(blockNumber);
+      return {blockNumber: blockNumber, balance: balance, blockHash: block.hash}
     } else {
       blockNumber = blockNumberNew;
       balance = await wanChain.getBalance(process.env.JACKPOT_ADDRESS);
@@ -365,10 +366,15 @@ async function getBalanceAndBlockNumber() {
   }
 }
 
-// if blockNumber's blockHash != scanned blockHash then rollback to the last same blockHash
-async function scanAndCheck() {
-
-  await doScan(from, step, to, balance);
+// 
+async function scanAndCheck(from, step, to, balance, blockHash) {
+  const block = await wanChain.getBlock(to);
+  if (block && block.hash === blockHash) {
+    await doScan(from, step, to, balance);
+  } else {
+    lastException = null;
+    bScanning = false;
+  }
 }
 
 function init() {
@@ -388,7 +394,7 @@ setInterval(async () => {
     try {
       const from = db.getScan().blockNumber + 1;
       const step = parseInt(process.env.SCAN_STEP)
-      const {blockNumber, balance} = await getBalanceAndBlockNumber();
+      const {blockNumber, balance, blockHash} = await getBalanceAndBlockNumber();
       const to = blockNumber;
       if (from > to) {
         bScanning = false;
@@ -397,9 +403,9 @@ setInterval(async () => {
       }
       // const to = 54719;
     
-      log.info(`scanAndCheck from=${from},to=${to}`);
+      log.info(`scanAndCheck from=${from},to=${to}, blockHash=${blockHash}`);
       setTimeout(async () => {
-          await doScan(from, step, to, balance);
+          await scanAndCheck(from, step, to, balance, blockHash);
       }, parseInt(process.env.SCAN_DELAY));
     } catch (e) {
       let reason = "";

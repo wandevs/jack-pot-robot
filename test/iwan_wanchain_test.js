@@ -1,6 +1,6 @@
 const assert = require("assert");
 
-require("dotenv").config({path: `${__dirname}/../.env.testnet`});
+require("dotenv").config({path: `${__dirname}/../.env.dev`});
 const jpApi = require("../abi/jacks-pot");
 const wanChain = require("../src/lib/wanchain").wanChain;
 const wanChain_contract = new wanChain.web3.eth.Contract(jpApi, process.env.JACKPOT_ADDRESS);

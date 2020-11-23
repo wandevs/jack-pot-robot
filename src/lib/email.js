@@ -36,15 +36,17 @@ const mailOptions = {
 
 // send mail with defined transport object
 const sendMail = async (subject, content, from = process.env.EMAIL_FROM_NAME) => {
-    const mailOptions = {
-        from: from, // sender address
-        to: process.env.EMAIL_TO_NAME, // list of receivers
-        subject: subject,
-        html: `<b>${content}</b>`
-    };
+    // const mailOptions = {
+    //     from: from, // sender address
+    //     to: process.env.EMAIL_TO_NAME, // list of receivers
+    //     subject: subject,
+    //     html: `<b>${content}</b>`
+    // };
 
-    const info = await transporter.sendMail(mailOptions);
-    log.info('Message sent: %s', info.messageId);
+    // const info = await transporter.sendMail(mailOptions);
+    // log.info('Message sent: %s', info.messageId);
+
+    log.info(`sendMail ${subject} ${content}, ${from}`)
 };
 
 module.exports = sendMail;
