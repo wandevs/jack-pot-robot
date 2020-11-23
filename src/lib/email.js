@@ -46,7 +46,7 @@ const sendMail = async (subject, content, from = process.env.EMAIL_FROM_NAME) =>
     const info = await transporter.sendMail(mailOptions);
     log.info('Message sent: %s', info.messageId);
 
-    // log.info(`sendMail ${subject} ${content}, ${from}`)
+    log.info(`sendMail ${subject} ${content}, ${from}`)
 };
 
 module.exports = sendMail;
