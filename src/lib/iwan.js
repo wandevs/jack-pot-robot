@@ -31,23 +31,33 @@ class IWan {
     return await this.apiClient.getBalance(process.env.IWAN_CHAINTYPE, addr);
   }
 
-  web0ToWeb1(name, result, contract) {
+  web0ToWeb1(name, result, contract, args) {
     if (result instanceof Array) {
-      const method = contract.methods[name]();
+      const method = contract.methods[name](...args);
       const rt = {};
       for (let i=0; i<method._method.outputs.length; i++) {
         const rtType = method._method.outputs[i].type;
         // web0.20 === delegatePool = "1.05e+21", BN not support
         if (rtType === "uint256" || rtType === "uint") {
           rt[i] = new BigNumber(result[i]).toString(10);
+        }
+        else if (rtType === "uint256[]") {
+          const tmp = [];
+          result.forEach((v) => {tmp.push(new BigNumber(v).toString(10));} )
+          rt[i] = tmp;
+
+          if (method._method.outputs.length === 1) {
+            return tmp;
+          }
         } else {
           rt[i] = result[i];
         }
         rt[method._method.outputs[i].name] = rt[i];
       }
+      
       return rt;
     } else {
-      const method = contract.methods[name]();
+      const method = contract.methods[name](...args);
       const rtType = method._method.outputs[0].type;
       if (rtType === "uint256" || rtType === "uint") {
         return new BigNumber(result).toString(10)
@@ -55,15 +65,22 @@ class IWan {
         return result;
       }
     }
+    return rt;
   }
+
   async getScVar(name, contract, abi) {
     const result = await this.apiClient.getScVar(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, abi);
-    return this.web0ToWeb1(name, result, contract);
+    return this.web0ToWeb1(name, result, contract, []);
+  }
+
+  async getScMap(name, key, contract, abi) {
+    const result = await this.apiClient.getScMap(process.env.IWAN_CHAINTYPE, contract._address.toLowerCase(), name, key, abi);
+    return this.web0ToWeb1(name, result, contract, [key]);
   }
 
   async getScFun(name, args, contract, abi) {
     const result = await this.apiClient.callScFunc(process.env.IWAN_CHAINTYPE, process.env.JACKPOT_ADDRESS, name, args, abi);
-    return this.web0ToWeb1(name, result, contract);
+    return this.web0ToWeb1(name, result, contract, args);
   }
 
   async getBlockNumber() {

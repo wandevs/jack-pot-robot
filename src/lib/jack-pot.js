@@ -27,6 +27,7 @@ class JackPot {
 
     async logAndSendMail(subject, content, isSend = true) {
         log.error(subject + " : " + content);
+        return;
         try {
             if (isSend) {
                 await sendMail(subject, content);
@@ -135,6 +136,10 @@ class JackPot {
         return await this.doOperator(this.runDelegateOut.name, data);
     }
 
+    async getValidatorsAmountMap(validatorAddr) {
+        return await wanChain.getScMap("validatorsAmountMap", validatorAddr, this.contract, abiJackPot);
+    }
+
     async getValidatorsInfo() {
         const infos = await wanChain.getScVar("validatorsInfo", this.contract, abiJackPot);
         infos.validatorsCount = parseInt(infos.validatorsCount);
@@ -159,9 +164,12 @@ class JackPot {
                 if (si.nextLockEpochs === 0) {
                     if (!isDelegateOut) {
                         try {
-                            await this.runDelegateOut(validatorsAddrs[i]);
-                            isDelegateOut = true;
-                            await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out success`);
+                            const validatorAmount = await this.getValidatorsAmountMap(validatorsAddrs[i]);
+                            if (validatorAmount !== "0") {
+                                await this.runDelegateOut(validatorsAddrs[i]);
+                                isDelegateOut = true;
+                                await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out success`);
+                            }
                         } catch(e) {
                             await this.logAndSendMail(subject, `${validatorsAddrs[i]} delegate out failed : ${e instanceof Error ? e.stack : e}`);
                         }

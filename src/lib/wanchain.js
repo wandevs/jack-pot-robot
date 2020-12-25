@@ -50,6 +50,10 @@ class WanChain {
     return await contract.methods[name]().call();
   }
 
+  async getScMap(name, key, contract, abi) {
+    return await contract.methods[name](key).call();
+  }
+
   async getScFun(name, args, contract, abi) {
     return await contract.methods[name](...args).call();
   }
