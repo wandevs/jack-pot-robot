@@ -27,7 +27,6 @@ class JackPot {
 
     async logAndSendMail(subject, content, isSend = true) {
         log.error(subject + " : " + content);
-        return;
         try {
             if (isSend) {
                 await sendMail(subject, content);
