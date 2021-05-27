@@ -78,11 +78,11 @@ class JackPot {
         if (result.status) {
             const logs = result.logs;
             const outOfGasEvent = web3.utils.keccak256("GasNotEnough()");
-            const isOutOfGas = logs.find((log) => { log.topics[0] === outOfGasEvent });
+            const isOutOfGas = logs.find((log) => { return log.topics[0] === outOfGasEvent });
             if (isOutOfGas) {
                 setTimeout(async () => {
                     await this.update();
-                }, 0);
+                }, 1000);
             }
         }
     }
